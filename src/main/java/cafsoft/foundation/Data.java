@@ -23,7 +23,7 @@ import java.util.Date;
 //  Data.java
 //
 //  Created by Cesar Franco on 10/07/16.
-//  Copyright © 2015 Cesar Franco. All rights reserved.
+//  Copyright © 2015 - 2018 Cesar Franco. All rights reserved.
 //
 public class Data {
 
