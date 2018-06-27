@@ -12,6 +12,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Date;
 
 /*
@@ -25,11 +26,10 @@ import java.util.Date;
 //  Created by Cesar Franco on 10/07/16.
 //  Copyright © 2015 - 2018 Cesar Franco. All rights reserved.
 //
-
 /**
- * @author      Cesar Franco <cesar.franco@ucaldas.edu.co>
- * @version     1.0.0
- * @since       1.0.0
+ * @author Cesar Franco <cesar.franco@ucaldas.edu.co>
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class Data {
 
@@ -37,7 +37,6 @@ public class Data {
     private static final int BUFFER_SIZE = 100 * KB;
     private ByteBuffer byteData = null;
 
-    
     public Data(int count) {
         byteData = ByteBuffer.allocate(count);
     }
@@ -55,8 +54,8 @@ public class Data {
 
         read(url);
     }
-    
-    public Data(InputStream inStream) throws IOException{
+
+    public Data(InputStream inStream) throws IOException {
         byteData = getBytes(inStream);
     }
 
@@ -125,12 +124,13 @@ public class Data {
         }
     }
 
-    /** 
-    Writes the data object's bytes to the file specified by a given path.
-    @param path The location to which to write the receiver's bytes.
-    @param useAuxiliaryFile If true, the data is written to a backup file, and 
-    then—assuming no errors occur—the backup file is renamed to the name 
-    specified by path; otherwise, the data is written directly to path.
+    /**
+     * Writes the data object's bytes to the file specified by a given path.
+     *
+     * @param path The location to which to write the receiver's bytes.
+     * @param useAuxiliaryFile If true, the data is written to a backup file,
+     * and then—assuming no errors occur—the backup file is renamed to the name
+     * specified by path; otherwise, the data is written directly to path.
      */
     private boolean write(String path, boolean useAuxiliaryFile)
             throws IOException {
@@ -152,7 +152,7 @@ public class Data {
         fis.close();
 
         if (useAuxiliaryFile) {
-            new File(path).delete();
+            Files.deleteIfExists(new File(path).toPath());
             if (file.renameTo(new File(path))) {
                 wasWritten = true;
             }
@@ -169,7 +169,7 @@ public class Data {
         final String protocol = url.getProtocol();
 
         if (protocol.equals("file")) {
-            if (!write(url.toURI().getPath(), atomically)){
+            if (!write(url.toURI().getPath(), atomically)) {
                 throw new IOException();
             }
         }
