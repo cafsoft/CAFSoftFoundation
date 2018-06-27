@@ -27,7 +27,6 @@ import java.util.Date;
 //  Copyright © 2015 - 2018 Cesar Franco. All rights reserved.
 //
 /**
- * @author Cesar Franco <cesar.franco@ucaldas.edu.co>
  * @version 1.0.0
  * @since 1.0.0
  */
