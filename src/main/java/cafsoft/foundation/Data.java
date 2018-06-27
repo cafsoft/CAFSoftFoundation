@@ -25,15 +25,19 @@ import java.util.Date;
 //  Created by Cesar Franco on 10/07/16.
 //  Copyright © 2015 - 2018 Cesar Franco. All rights reserved.
 //
+
+/**
+ * @author      Cesar Franco <cesar.franco@ucaldas.edu.co>
+ * @version     1.0.0
+ * @since       1.0.0
+ */
 public class Data {
 
     private final static int KB = 1024;
     private static final int BUFFER_SIZE = 100 * KB;
     private ByteBuffer byteData = null;
 
-    /*public Data(byte[] bytes, int length) {
-        byteData = ByteBuffer.wrap(bytes, 0, length);
-    }*/
+    
     public Data(int count) {
         byteData = ByteBuffer.allocate(count);
     }
@@ -51,7 +55,10 @@ public class Data {
 
         read(url);
     }
-
+    
+    public Data(InputStream inStream) throws IOException{
+        byteData = getBytes(inStream);
+    }
 
     /*
     Read bytes from a InputStream
@@ -118,10 +125,10 @@ public class Data {
         }
     }
 
-    /* 
+    /** 
     Writes the data object's bytes to the file specified by a given path.
-    @path The location to which to write the receiver's bytes.
-    @useAuxiliaryFile If true, the data is written to a backup file, and 
+    @param path The location to which to write the receiver's bytes.
+    @param useAuxiliaryFile If true, the data is written to a backup file, and 
     then—assuming no errors occur—the backup file is renamed to the name 
     specified by path; otherwise, the data is written directly to path.
      */
