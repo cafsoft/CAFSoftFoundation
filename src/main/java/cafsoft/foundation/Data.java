@@ -27,7 +27,8 @@ import java.util.Date;
 //
 public class Data {
 
-    private static final int BUFFER_SIZE = 100 * 1024; // ~130K.
+    private final static int KB = 1024;
+    private static final int BUFFER_SIZE = 100 * KB;
     private ByteBuffer byteData = null;
 
     /*public Data(byte[] bytes, int length) {
@@ -37,12 +38,12 @@ public class Data {
         byteData = ByteBuffer.allocate(count);
     }
 
-    public Data(String text, Charset charset){
-       byteData = ByteBuffer.wrap(text.getBytes(charset));
+    public Data(String text, Charset charset) {
+        byteData = ByteBuffer.wrap(text.getBytes(charset));
     }
-    
-    public Data(String text){
-       this(text, Charset.forName("UTF-8"));
+
+    public Data(String text) {
+        this(text, Charset.forName("UTF-8"));
     }
 
     public Data(URL url)
@@ -50,7 +51,7 @@ public class Data {
 
         read(url);
     }
-    
+
 
     /*
     Read bytes from a InputStream
@@ -91,8 +92,7 @@ public class Data {
 
         if (protocol.equals("file")) {
             read(url.toURI().getPath());
-        }
-        else if (protocol.equals("http")) {
+        } else if (protocol.equals("http")) {
             InputStream inStream = null;
             int response = -1;
             URLConnection conn = null;
@@ -125,50 +125,49 @@ public class Data {
     then—assuming no errors occur—the backup file is renamed to the name 
     specified by path; otherwise, the data is written directly to path.
      */
-    private boolean write(String path, boolean useAuxiliaryFile) {
+    private boolean write(String path, boolean useAuxiliaryFile)
+            throws IOException {
+
         boolean wasWritten = false;
-        File inFile = null;
+        File file = null;
         FileOutputStream fis = null;
 
-        try {
-            if (useAuxiliaryFile) {
-                inFile = File.createTempFile("tmp", ".tmp");
-            }
-            else {
-                inFile = new File(path);
-            }
+        if (useAuxiliaryFile) {
+            file = File.createTempFile("tmp", ".tmp");
+        } else {
+            file = new File(path);
+        }
 
-            fis = new FileOutputStream(inFile);
-            fis.write(byteData.array());
+        fis = new FileOutputStream(file);
+        fis.write(byteData.array());
 
-            inFile.setLastModified(new Date().getTime());
-            fis.close();
+        file.setLastModified(new Date().getTime());
+        fis.close();
 
-            if (useAuxiliaryFile) {
-                if (inFile.renameTo(new File(path))) {
-                    wasWritten = true;
-                }
-            }
-            else {
+        if (useAuxiliaryFile) {
+            new File(path).delete();
+            if (file.renameTo(new File(path))) {
                 wasWritten = true;
             }
-
-        }
-        catch (IOException e) {
+        } else {
+            wasWritten = true;
         }
 
         return wasWritten;
     }
 
-    public void write(URL url, boolean useAuxiliaryFile) 
+    public void write(URL url, boolean atomically)
             throws IOException, URISyntaxException {
-        
+
         final String protocol = url.getProtocol();
-        
+
         if (protocol.equals("file")) {
-            write(url.toURI().getPath(), useAuxiliaryFile);
+            if (!write(url.toURI().getPath(), atomically)){
+                throw new IOException();
+            }
         }
     }
+
     public String toText(Charset charset) {
         return new String(byteData.array(), charset);
     }
