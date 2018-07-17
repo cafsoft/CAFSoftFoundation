@@ -97,7 +97,7 @@ public class Data {
 
         if (protocol.equals("file")) {
             read(url.toURI().getPath());
-        } else if (protocol.equals("http")) {
+        } else if (protocol.startsWith("http")) {
             InputStream inStream = null;
             int response = -1;
             URLConnection conn = null;
