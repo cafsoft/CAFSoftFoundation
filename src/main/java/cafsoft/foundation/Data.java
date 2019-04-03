@@ -182,6 +182,10 @@ public class Data {
         return toText(Charset.forName("UTF-8"));
     }
 
+    public byte[] toArray(){
+        return byteData.array().clone();
+    }
+    
     public int length() {
         int length = 0;
 
