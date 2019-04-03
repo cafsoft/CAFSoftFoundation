@@ -6,3 +6,4 @@ build/
 *.aar
 *.war
 /.nb-gradle/
+*.DS_Store
