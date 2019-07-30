@@ -1,14 +1,8 @@
-# Java class file (Java bytecode)
 *.class
-
-# Java ARchive
-*.jar
-
-# Gradle
-*.gradle
-
-# Netbeans project
 build/
+.gradle
 
-# System - macOS
-.DS_Store
+*.jar
+*.aar
+*.war
+!gradle-wrapper.jar
