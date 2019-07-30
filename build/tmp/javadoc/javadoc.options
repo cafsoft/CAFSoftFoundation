@@ -1,6 +1,0 @@
--classpath '/Volumes/Mac HDD/ceaufres/NetBeansProjects/CAFSoftFoundation/CAFSoftFoundation/build/classes/java/main:/Volumes/Mac HDD/ceaufres/NetBeansProjects/CAFSoftFoundation/CAFSoftFoundation/build/resources/main'
--d '/Volumes/Mac HDD/ceaufres/NetBeansProjects/CAFSoftFoundation/CAFSoftFoundation/build/docs/javadoc'
--doctitle 'CAFSoftFoundation API'
--quiet 
--windowtitle 'CAFSoftFoundation API'
-'/Volumes/Mac HDD/ceaufres/NetBeansProjects/CAFSoftFoundation/CAFSoftFoundation/src/main/java/cafsoft/foundation/Data.java'

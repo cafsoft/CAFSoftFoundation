@@ -3,6 +3,8 @@
 [![](https://jitpack.io/v/cesarfrancoe/CAFSoftFoundation.svg)](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
 
 
+[https://jitpack.io/#cesarfrancoe/CAFSoftFoundation](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
+
 To install the library add: 
  
    ```gradle
@@ -11,7 +13,7 @@ To install the library add:
         maven { url "https://jitpack.io" }
    }
    dependencies {
-         implementation 'com.github.cesarfrancoe:CAFSoftFoundation:v2.0.0-Beta.2'
+         compile 'com.github.cesarfrancoe:CAFSoftFoundation:v2.0.0-beta.2'
    }
    ```  
 
