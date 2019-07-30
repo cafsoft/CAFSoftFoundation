@@ -1,9 +1,10 @@
 *.class
 build/
-.gradle
+gradle/
+wrapper/
 
-*.jar
-*.aar
-*.war
-/.nb-gradle/
-*.DS_Store
+*.gradle
+gradlew
+*.md
+*.bat
+LICENSE
