@@ -6,12 +6,10 @@
 
 # Gradle
 *.gradle
-gradlew
-gradle/
 
-# Netbeans Project
+# Netbeans project
 build/
 wrapper/
 
-# Desktop Services Store - macOS
+# System - macOS
 .DS_Store
