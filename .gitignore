@@ -1,10 +1,19 @@
+# Java class file (Java bytecode)
 *.class
-build/
-gradle/
-wrapper/
 
+# Gradle
 *.gradle
 gradlew
+gradle/
+
+# Netbeans Project
+build/
+
+wrapper/
+
 *.md
 *.bat
 LICENSE
+
+# Desktop Services Store - macOS
+.DS_Store
