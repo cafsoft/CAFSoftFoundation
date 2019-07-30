@@ -1,4 +1,5 @@
 # CAFSoftFoundation
+[![](https://jitpack.io/v/cesarfrancoe/CAFSoftFoundation.svg)](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
 
 To install the library add: 
  
