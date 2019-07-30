@@ -6,3 +6,6 @@ build/
 *.aar
 *.war
 !gradle-wrapper.jar
+
+# System files macOS
+*.DS_Store
