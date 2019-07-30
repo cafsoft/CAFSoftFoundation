@@ -1,2 +1,10 @@
-# System files macOS
+*.class
+build/
+.gradle
+
+*.jar
+*.aar
+*.war
+!gradle-wrapper.jar
+
 *.DS_Store
