@@ -1,6 +1,9 @@
 # Java class file (Java bytecode)
 *.class
 
+# Java ARchive
+*.jar
+
 # Gradle
 *.gradle
 gradlew
