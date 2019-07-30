@@ -1,7 +1,10 @@
 # gradle-simple
 
-[![](https://jitpack.io/v/cesarfrancoe/CAFSoftFoundation.svg)](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
+[![](https://jitpack.io/v/jitpack/gradle-simple.svg?label=Release)](https://jitpack.io/#jitpack/gradle-simple)
 
+Example Gradle project producing a single jar. Uses the `maven` plugin to publish the jar to the local repository.
+
+[https://jitpack.io/#jitpack/gradle-simple](https://jitpack.io/#jitpack/gradle-simple)
 
 To install the library add: 
  
@@ -11,7 +14,7 @@ To install the library add:
         maven { url "https://jitpack.io" }
    }
    dependencies {
-         implementation 'com.github.cesarfrancoe:CAFSoftFoundation:v2.0.0-Beta.1'
+         compile 'com.github.jitpack:CAFSoftFoundation:v2.0.0-beta1'
    }
    ```  
 
