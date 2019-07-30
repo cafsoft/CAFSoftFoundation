@@ -9,7 +9,6 @@
 
 # Netbeans project
 build/
-wrapper/
 
 # System - macOS
 .DS_Store
