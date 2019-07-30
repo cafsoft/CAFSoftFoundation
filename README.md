@@ -9,7 +9,7 @@ To install the library add:
         maven { url "https://jitpack.io" }
    }
    dependencies {
-         compile 'com.github.jitpack:CAFSoftFoundation:v2.0.0-beta1'
+         compile 'com.github.jitpack:CAFSoftFoundation:v2.0.0-beta2'
    }
    ```  
 
