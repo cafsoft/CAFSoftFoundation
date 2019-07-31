@@ -6,6 +6,10 @@ group = 'com.github.cesarfrancoe'
 sourceCompatibility = 1.8 // java 8
 targetCompatibility = 1.8
 
+plugins {
+    id 'java-library'
+}
+
 repositories {
   mavenCentral()
 }
