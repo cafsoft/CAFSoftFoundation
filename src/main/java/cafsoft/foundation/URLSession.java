@@ -65,43 +65,46 @@ public class URLSession {
                     conn = request.getUrl().openConnection();
                     if (conn instanceof HttpURLConnection) {
                         HttpURLConnection httpConn = (HttpURLConnection) conn;
+
+                        responseCode = httpConn.getResponseCode();
+
                         httpConn.setRequestMethod(request.getHttpMethod());
 
                         // Java 7 compatible code
-                        HashMap<String, String> headerFields;
-                        headerFields = request.getAllHttpHeaderFields();
-                        for (Map.Entry<String, String> entry : headerFields.entrySet()) {
-                            String key = entry.getKey();
-                            String value = entry.getValue();
+                        Set<Map.Entry<String, String>> allHeaders;
+                        allHeaders = request.getAllHttpHeaderFields().entrySet();
+                        for (Map.Entry<String, String> header : allHeaders) {
+                            String key = header.getKey();
+                            String value = header.getValue();
                             httpConn.addRequestProperty(key, value);
                         }
 
-                        /*  Java 8 compatible code (Lambda expressions)
+                        /*
+                        // Java 8 compatible code (Lambda expressions)
                         request.getAllHttpHeaderFields().forEach((value, field) -> {
                             httpConn.addRequestProperty(field, value);
                         });
                          */
+                        
                         httpConn.setConnectTimeout(configuration.getConnectTimeout());
                         httpConn.setReadTimeout(configuration.getReadTimeout());
-                        httpConn.setAllowUserInteraction(false);
-                        httpConn.setInstanceFollowRedirects(true);
+                        //httpConn.setAllowUserInteraction(false);
+                        //httpConn.setInstanceFollowRedirects(true);
                         //httpConn.setDoInput(true);
-                        httpConn.setDoOutput(true);
+                        //httpConn.setDoOutput(true);
 
-                        if (!request.getHttpBody().isEmpty()) {
-                            OutputStream os = httpConn.getOutputStream();
-                            os.write(request.getHttpBody().getBytes());
-                            os.flush();
+                        if (request.getHttpMethod().equals("POST")) {
+                            if (!request.getHttpBody().isEmpty()) {
+                                httpConn.setDoOutput(true);
+                                OutputStream os = httpConn.getOutputStream();
+                                os.write(request.getHttpBody().getBytes());
+                                os.flush();
+                            }
                         }
 
-                        responseCode = httpConn.getResponseCode();
-
                         if (responseCode == HttpURLConnection.HTTP_OK) {
-
                             inStream = httpConn.getInputStream();
-
                             data = new Data(inStream);
-
                             inStream.close();
                         } else {
                             error = new Error();
@@ -111,7 +114,7 @@ public class URLSession {
 
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
 
                 if (completionHandler != null) {
