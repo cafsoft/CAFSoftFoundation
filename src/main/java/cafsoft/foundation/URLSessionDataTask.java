@@ -9,27 +9,10 @@ package cafsoft.foundation;
  *
  * @author ceaufres
  */
-public class URLSessionDataTask {
-
-    private Thread thread = null;
-
-    public URLSessionDataTask(Runnable r) {
-        thread = new Thread(r);
-    }
-
-    public void resume() {
-        if (!thread.isAlive()) {
-            thread.start();
-        }
-    }
-
-    /*
-    public void cancel(){
-        thread.stop();
+public class URLSessionDataTask extends URLSessionTask{
+    
+    public URLSessionDataTask(Runnable runnable) {
+        super(runnable);
     }
     
-    public void suspend(){
-        thread.suspend();
-    }
-     */
 }

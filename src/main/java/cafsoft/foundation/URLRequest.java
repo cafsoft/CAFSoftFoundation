@@ -13,7 +13,7 @@ import java.util.HashMap;
  * @author ceaufres
  */
 public class URLRequest{
-    private URL url;
+    private URL url = null;
     private String httpMethod = "GET";
     private String httpBody = "";
     private HashMap<String, String> httpHeaderFields = new HashMap<>();

@@ -25,7 +25,7 @@ import java.util.Date;
 //  Data.java
 //
 //  Created by Cesar Franco on 10/07/16.
-//  Copyright © 2015 - 2019 Cesar Franco. All rights reserved.
+//  Copyright © 2015 - 2018 Cesar Franco. All rights reserved.
 //
 /**
  * @version 1.0.0
@@ -38,14 +38,17 @@ public class Data {
     private ByteBuffer byteData = null;
 
     public Data(int count) {
+
         byteData = ByteBuffer.allocate(count);
     }
 
     public Data(String text, Charset charset) {
+
         byteData = ByteBuffer.wrap(text.getBytes(charset));
     }
 
     public Data(String text) {
+
         this(text, StandardCharsets.UTF_8);
     }
 
@@ -53,6 +56,10 @@ public class Data {
             throws IOException, URISyntaxException {
 
         read(url);
+    }
+
+    public Data(ByteBuffer byteData) {
+        this.byteData = byteData;
     }
 
     public Data(InputStream inStream) throws IOException {
@@ -98,7 +105,7 @@ public class Data {
 
         if (protocol.equals("file")) {
             read(url.toURI().getPath());
-        } else if (protocol.startsWith("http")) {
+        } else if (protocol.equals("http") || protocol.equals("https")) {
             InputStream inStream = null;
             int response = -1;
             URLConnection conn = null;
@@ -106,8 +113,8 @@ public class Data {
             conn = url.openConnection();
             if (conn instanceof HttpURLConnection) {
                 HttpURLConnection httpConn = (HttpURLConnection) conn;
-                httpConn.setReadTimeout(10000);
-                httpConn.setConnectTimeout(15000);
+                httpConn.setReadTimeout(40000);
+                httpConn.setConnectTimeout(25000);
                 httpConn.setAllowUserInteraction(false);
                 httpConn.setInstanceFollowRedirects(true);
                 httpConn.setRequestMethod("GET");
@@ -183,10 +190,10 @@ public class Data {
         return toText(StandardCharsets.UTF_8);
     }
 
-    public byte[] toArray(){
+    public byte[] toBytes() {
         return byteData.array().clone();
     }
-    
+
     public int length() {
         int length = 0;
 

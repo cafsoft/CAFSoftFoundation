@@ -12,13 +12,13 @@ import java.net.URL;
  * @author ceaufres
  */
 public class URLResponse {
-    private URL _URL = null;
+    private URL theURL = null;
 
     public URLResponse(URL newURL) {
-        _URL = newURL;
+        theURL = newURL;
     }
 
     public URL getURL() {
-        return _URL;
+        return theURL;
     }   
 }
