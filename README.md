@@ -14,7 +14,7 @@ To install the library add:
         maven { url "https://jitpack.io" }
    }
    dependencies {
-         compile 'com.github.cesarfrancoe:CAFSoftFoundation:v2.0.0-beta.3'
+         compile 'com.github.cesarfrancoe:CAFSoftFoundation:v2.0.0-beta.5'
    }
    ```  
 
