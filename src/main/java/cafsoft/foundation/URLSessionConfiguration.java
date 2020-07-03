@@ -11,8 +11,8 @@ package cafsoft.foundation;
  */
 public class URLSessionConfiguration {
 
-    private int connectTimeout = 15000;
-    private int readTimeout = 30000;
+    private int connectTimeout = 0;
+    private int readTimeout = 0;
 
     /**
      * @return the connectTimeout

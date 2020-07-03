@@ -11,6 +11,6 @@ package cafsoft.foundation;
  */
 public interface DataTaskCompletionHandler {
     
-    public abstract void run(Data data, URLResponse response, Error error);
+    public abstract void exec(Data data, URLResponse response, Error error);
     
 }

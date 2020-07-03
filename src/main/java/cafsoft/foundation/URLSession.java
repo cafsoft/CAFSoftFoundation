@@ -10,8 +10,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +21,7 @@ import java.util.concurrent.Executors;
  */
 public class URLSession {
 
+    //private int nextTaskIdentifier = 1;
     private ExecutorService workQueue = null;
 
     private static URLSession shared = null;
@@ -33,6 +32,7 @@ public class URLSession {
 
         this.configuration = configuration;
         workQueue = Executors.newSingleThreadExecutor();
+        //workQueue = Executors.newFixedThreadPool(1);
     }
 
     public URLSession() {
@@ -45,10 +45,171 @@ public class URLSession {
         if (shared == null) {
             shared = new URLSession();
         }
+
         return shared;
     }
 
+    /*
+    private int createNextTaskIdentifier() {
+
+        int i = nextTaskIdentifier;
+
+        nextTaskIdentifier = nextTaskIdentifier + 1;
+
+        return i;
+    }
+     */
+    private void sendGETRequest(URLRequest req,
+            DataTaskCompletionHandler completionHandler) {
+
+        HttpURLConnection httpURLConnection = null;
+        int respCode = -1;
+        InputStream inStream = null;
+        Data data = null;
+        Error error = null;
+
+        try {
+            httpURLConnection = (HttpURLConnection) req.getUrl().openConnection();
+            httpURLConnection.setDoOutput(true);
+            httpURLConnection.setRequestMethod(req.getHttpMethod());
+
+            // Java 7 compatible code
+            Set<Map.Entry<String, String>> allHeaders;
+            allHeaders = req.getAllHttpHeaderFields().entrySet();
+            for (Map.Entry<String, String> header : allHeaders) {
+                String key = header.getKey();
+                String value = header.getValue();
+                httpURLConnection.addRequestProperty(key, value);
+            }
+
+            /*
+        //Java 8 compatible code (Lambda expressions
+        )
+                        request.getAllHttpHeaderFields().forEach((value, field) -> {
+            httpConn.addRequestProperty(field, value);
+        });
+             */
+            httpURLConnection.setConnectTimeout(configuration.getConnectTimeout());
+            httpURLConnection.setReadTimeout(configuration.getReadTimeout());
+            //System.out.println(httpURLConnection.getConnectTimeout());
+            //System.out.println(httpURLConnection.getReadTimeout());
+
+            if (req.getHttpMethod().equals("POST")) {
+                if (!req.getHttpBody().isEmpty()) {
+                    OutputStream os = httpURLConnection.getOutputStream();
+                    os.write(req.getHttpBody().getBytes());
+                    os.flush();
+                }
+            }
+
+            respCode = httpURLConnection.getResponseCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                inStream = httpURLConnection.getInputStream();
+                data = new Data(inStream);
+                inStream.close();
+            } else {
+                error = new Error();
+            }
+
+            httpURLConnection.disconnect();
+
+        } catch (IOException e) {
+        }
+
+        if (completionHandler != null) {
+            HTTPURLResponse resp = null;
+            resp = new HTTPURLResponse(req.getUrl(), respCode);
+
+            completionHandler.exec(data, resp, error);
+        }
+    }
+
+    private void sendHttpRequest(URLRequest request,
+            DataTaskCompletionHandler completionHandler) {
+
+        HttpURLConnection conn = null;
+        int respCode = -1;
+        InputStream inStream = null;
+        Data data = null;
+        Error error = null;
+
+        try {
+            conn = (HttpURLConnection) request.getUrl().openConnection();
+            if (request.getHttpMethod().equals("POST")) {
+                conn.setDoOutput(true);
+                conn.setRequestMethod(request.getHttpMethod());
+
+                // Java 7 compatible code
+                Set<Map.Entry<String, String>> allHeaders;
+                allHeaders = request.getAllHttpHeaderFields().entrySet();
+                for (Map.Entry<String, String> header : allHeaders) {
+                    String key = header.getKey();
+                    String value = header.getValue();
+                    conn.addRequestProperty(key, value);
+                }
+
+                ////Java 8 compatible code (Lambda expressions
+                //request.getAllHttpHeaderFields().forEach((value, field) -> {
+                //    httpConn.addRequestProperty(field, value);
+                //});
+                conn.setConnectTimeout(configuration.getConnectTimeout());
+                conn.setReadTimeout(configuration.getReadTimeout());
+
+                if (!request.getHttpBody().isEmpty()) {
+                    OutputStream os = conn.getOutputStream();
+                    os.write(request.getHttpBody().getBytes());
+                    os.flush();
+                }
+
+            } else { // Method GET
+                conn.setRequestMethod(request.getHttpMethod());
+                conn.setConnectTimeout(configuration.getConnectTimeout());
+                conn.setReadTimeout(configuration.getReadTimeout());
+            }
+
+            respCode = conn.getResponseCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                inStream = conn.getInputStream();
+                data = new Data(inStream);
+                inStream.close();
+            } else {
+                error = new Error();
+            }
+
+        } catch (IOException e) {
+        }
+
+        if (conn != null) {
+            conn.disconnect();
+        }
+
+        if (completionHandler != null) {
+            HTTPURLResponse resp = null;
+            resp = new HTTPURLResponse(request.getUrl(), respCode);
+
+            completionHandler.exec(data, resp, error);
+        }
+    }
+
     public URLSessionDataTask dataTask(URLRequest request,
+            DataTaskCompletionHandler completionHandler) {
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                String method = request.getHttpMethod();
+
+                if (method.equals("GET") || method.equals("POST")) {
+                    sendHttpRequest(request, completionHandler);
+                }
+            }
+        };
+
+        return new URLSessionDataTask(workQueue, runnable);
+    }
+
+    /*
+    public URLSessionDataTask dataTask(URLRequest req,
             DataTaskCompletionHandler completionHandler) {
 
         Runnable runnable = new Runnable() {
@@ -58,33 +219,32 @@ public class URLSession {
                 Data data = null;
                 URLConnection conn = null;
                 InputStream inStream = null;
-                int responseCode = -1;
+                int respCode = -1;
                 Error error = null;
 
                 try {
-                    conn = request.getUrl().openConnection();
+                    conn = req.getUrl().openConnection();
                     if (conn instanceof HttpURLConnection) {
                         HttpURLConnection httpConn = (HttpURLConnection) conn;
 
-                        responseCode = httpConn.getResponseCode();
+                        respCode = httpConn.getResponseCode();
 
-                        httpConn.setRequestMethod(request.getHttpMethod());
+                        httpConn.setRequestMethod(req.getHttpMethod());
 
                         // Java 7 compatible code
                         Set<Map.Entry<String, String>> allHeaders;
-                        allHeaders = request.getAllHttpHeaderFields().entrySet();
+                        allHeaders = req.getAllHttpHeaderFields().entrySet();
                         for (Map.Entry<String, String> header : allHeaders) {
                             String key = header.getKey();
                             String value = header.getValue();
                             httpConn.addRequestProperty(key, value);
                         }
 
-                        /*
-                        // Java 8 compatible code (Lambda expressions)
-                        request.getAllHttpHeaderFields().forEach((value, field) -> {
-                            httpConn.addRequestProperty(field, value);
-                        });
-                         */
+                        
+                        //// Java 8 compatible code (Lambda expressions)
+                        //request.getAllHttpHeaderFields().forEach((value, field) -> {
+                        //    httpConn.addRequestProperty(field, value);
+                        //});
                         
                         httpConn.setConnectTimeout(configuration.getConnectTimeout());
                         httpConn.setReadTimeout(configuration.getReadTimeout());
@@ -93,16 +253,16 @@ public class URLSession {
                         //httpConn.setDoInput(true);
                         //httpConn.setDoOutput(true);
 
-                        if (request.getHttpMethod().equals("POST")) {
-                            if (!request.getHttpBody().isEmpty()) {
+                        if (req.getHttpMethod().equals("POST")) {
+                            if (!req.getHttpBody().isEmpty()) {
                                 httpConn.setDoOutput(true);
                                 OutputStream os = httpConn.getOutputStream();
-                                os.write(request.getHttpBody().getBytes());
+                                os.write(req.getHttpBody().getBytes());
                                 os.flush();
                             }
                         }
 
-                        if (responseCode == HttpURLConnection.HTTP_OK) {
+                        if (respCode == HttpURLConnection.HTTP_OK) {
                             inStream = httpConn.getInputStream();
                             data = new Data(inStream);
                             inStream.close();
@@ -118,17 +278,17 @@ public class URLSession {
                 }
 
                 if (completionHandler != null) {
-                    HTTPURLResponse response = null;
-                    response = new HTTPURLResponse(request.getUrl(), responseCode);
+                    HTTPURLResponse resp = null;
+                    resp = new HTTPURLResponse(req.getUrl(), respCode);
 
-                    completionHandler.run(data, response, error);
+                    completionHandler.run(data, resp, error);
                 }
             }
         };
 
-        return new URLSessionDataTask(runnable);
+        return new URLSessionDataTask(workQueue, runnable);
     }
-
+     */
     public URLSessionDataTask dataTask(URLRequest request) {
 
         return dataTask(request, null);
