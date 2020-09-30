@@ -5,15 +5,13 @@
  */
 package cafsoft.foundation;
 
-import java.util.concurrent.ExecutorService;
-
 /**
  *
  * @author ceaufres
  */
 public class URLSessionDataTask extends URLSessionTask{
     
-    public URLSessionDataTask(ExecutorService newWorkQueue, Runnable r) {
+    public URLSessionDataTask(URLSessionTasksQueue newWorkQueue, Runnable r) {
         super(newWorkQueue, r);
     }
     

@@ -5,31 +5,36 @@
  */
 package cafsoft.foundation;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
 /**
  *
  * @author ceaufres
  */
 public class URLSessionTask {
 
-    private ExecutorService workQueue = null;
+    private URLSessionTasksQueue workQueue = null;
     private Runnable runnable = null;
-    private Future<String> future = null; 
-    //private Thread thread = null;
+    //private Future<String> future = null; 
+    private Thread thread = null;
 
-    public URLSessionTask(ExecutorService newWQ, Runnable newR){
+    public URLSessionTask(URLSessionTasksQueue newWQ, Runnable newR){
         workQueue = newWQ;
         runnable = newR;
     }
     
     public void resume(){
-         future = (Future<String>) workQueue.submit(runnable);
+         //future = (Future<String>) workQueue.submit(runnable);
+         thread = new Thread(runnable);
+         workQueue.add(this);
     }
     
+    /*
     public boolean cancel(){
         return future.cancel(true);
+    }
+    */
+    
+    public Thread getThread(){
+        return thread;
     }
     
     /*
@@ -65,4 +70,8 @@ public class URLSessionTask {
         thread.suspend();
     }
      */
+    
+    public Runnable getRunnable(){
+        return runnable;
+    }
 }

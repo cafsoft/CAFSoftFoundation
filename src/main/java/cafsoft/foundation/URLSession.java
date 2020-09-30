@@ -12,8 +12,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  *
@@ -22,7 +20,7 @@ import java.util.concurrent.Executors;
 public class URLSession {
 
     //private int nextTaskIdentifier = 1;
-    private ExecutorService workQueue = null;
+    private URLSessionTasksQueue workQueue = null;
 
     private static URLSession shared = null;
 
@@ -31,8 +29,9 @@ public class URLSession {
     public URLSession(URLSessionConfiguration configuration) {
 
         this.configuration = configuration;
-        workQueue = Executors.newSingleThreadExecutor();
+        //workQueue = Executors.newSingleThreadExecutor();
         //workQueue = Executors.newFixedThreadPool(1);
+        workQueue = new URLSessionTasksQueue();
     }
 
     public URLSession() {
@@ -177,6 +176,7 @@ public class URLSession {
             }
 
         } catch (IOException e) {
+            e.printStackTrace();
         }
 
         if (conn != null) {
