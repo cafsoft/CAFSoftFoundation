@@ -49,7 +49,7 @@ public class URLRequest{
     }
 */
     
-    public void addValue(String value, String field){
+    public void addValue(String field, String value){
         httpHeaderFields.put(field, value);
     }
     

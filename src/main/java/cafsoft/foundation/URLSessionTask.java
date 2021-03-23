@@ -10,21 +10,28 @@ package cafsoft.foundation;
  * @author ceaufres
  */
 public class URLSessionTask {
+    
+    public enum State {
+        RUNNING,
+        SUSPENDED,
+        CANCELING,
+        COMPLETED
+    }
 
-    private URLSessionTasksQueue workQueue = null;
-    private Runnable runnable = null;
+    private OperationQueue workQueue = null;
+    private Operation operation = null;
     //private Future<String> future = null; 
-    private Thread thread = null;
+    //private Thread thread = null;
 
-    public URLSessionTask(URLSessionTasksQueue newWQ, Runnable newR){
+    public URLSessionTask(OperationQueue newWQ, Operation newOperation){
         workQueue = newWQ;
-        runnable = newR;
+        operation = newOperation;
     }
     
     public void resume(){
          //future = (Future<String>) workQueue.submit(runnable);
-         thread = new Thread(runnable);
-         workQueue.add(this);
+         //thread = new Thread(operation.getcompletionBlock());
+         workQueue.addOperation(operation);
     }
     
     /*
@@ -33,9 +40,11 @@ public class URLSessionTask {
     }
     */
     
+    /*
     public Thread getThread(){
         return thread;
     }
+    */
     
     /*
     public URLSessionTask(Runnable r) {
@@ -71,7 +80,9 @@ public class URLSessionTask {
     }
      */
     
+    /*
     public Runnable getRunnable(){
         return runnable;
     }
+    */
 }

@@ -9,11 +9,9 @@ package cafsoft.foundation;
  *
  * @author ceaufres
  */
-public class URLSessionDataTask extends URLSessionTask{
+public class URLSessionUploadTask extends URLSessionDataTask {
     
-    public URLSessionDataTask(OperationQueue newWorkQueue, 
-            Operation newOperation) {
-        
+    public URLSessionUploadTask(OperationQueue newWorkQueue, Operation newOperation) {
         super(newWorkQueue, newOperation);
     }
     

@@ -5,13 +5,22 @@
  */
 package cafsoft.foundation;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -20,18 +29,27 @@ import java.util.Set;
 public class URLSession {
 
     //private int nextTaskIdentifier = 1;
-    private URLSessionTasksQueue workQueue = null;
+    private OperationQueue workQueue = null;
 
     private static URLSession shared = null;
 
     private URLSessionConfiguration configuration = null;
 
-    public URLSession(URLSessionConfiguration configuration) {
+    private URLSessionDelegate delegate = null;
+
+    private URLSession(URLSessionConfiguration configuration,
+            URLSessionDelegate delegate, OperationQueue queue) {
 
         this.configuration = configuration;
-        //workQueue = Executors.newSingleThreadExecutor();
-        //workQueue = Executors.newFixedThreadPool(1);
-        workQueue = new URLSessionTasksQueue();
+        this.delegate = delegate;
+        //... = queue;
+
+        workQueue = new OperationQueue();
+    }
+
+    public URLSession(URLSessionConfiguration configuration) {
+
+        this(configuration, null, null);
     }
 
     public URLSession() {
@@ -48,7 +66,93 @@ public class URLSession {
         return shared;
     }
 
+    private static void transfer(InputStream inStream,
+            OutputStream outStream, long contentSize)
+            throws IOException {
+
+        final int BUFFER_SIZE = 100 * 1024;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead = 0;
+        int total = 0;
+
+        do {
+            bytesRead = inStream.read(buffer);
+            if (bytesRead > 0) {
+                outStream.write(buffer, 0, bytesRead);
+                total += bytesRead;
+                System.out.println("Write bytes: " + total + "/" + contentSize);
+                //if (reading != null){
+                //    reading.onReading(bytesRead);
+                //}
+            }
+        } while (bytesRead != -1);
+    }
+
+    // Read bytes from connection and save its in memory block
+    private static Data downloadStreamInData(InputStream inStream)
+            throws IOException {
+
+        ByteArrayOutputStream outStream = null;
+        ByteBuffer byteData = null;
+
+        outStream = new ByteArrayOutputStream(); // (buffer.length)
+        transfer(inStream, outStream, -1);
+        byteData = ByteBuffer.wrap(outStream.toByteArray());
+        outStream.close();
+
+        return new Data(byteData);
+    }
+    
+    private static File downloadStreamInFile(InputStream inStream,
+            long contentLength)
+            throws IOException {
+
+        FileOutputStream outStream = null;
+        File tempFile = null;
+
+        tempFile = File.createTempFile("tmp", ".tmp");
+        outStream = new FileOutputStream(tempFile);
+        transfer(inStream, outStream, contentLength);
+        outStream.close();
+
+        return tempFile;
+    }
+
+    private static void uploadStream(OutputStream outStream, byte[] bytesBuffer)
+            throws IOException {
+
+        outStream.write(bytesBuffer);
+    }
+
+    
+
     /*
+    private static ByteBuffer getBytes(InputStream inStream)
+            throws IOException {
+
+        final int BUFFER_SIZE = 100 * 1024;
+
+        byte[] buffer = new byte[BUFFER_SIZE];
+        ByteArrayOutputStream outStream = null;
+        ByteBuffer byteData = null;
+
+        outStream = new ByteArrayOutputStream(buffer.length);
+        int bytesRead = 0;
+        while (bytesRead != -1) {
+            bytesRead = inStream.read(buffer);
+            if (bytesRead > 0) {
+                outStream.write(buffer, 0, bytesRead);
+                //if (reading != null){
+                //    reading.onReading(bytesRead);
+                //}
+            }
+        }
+        byteData = ByteBuffer.wrap(outStream.toByteArray());
+
+        return byteData;
+    }
+     */
+ /*
     private int createNextTaskIdentifier() {
 
         int i = nextTaskIdentifier;
@@ -59,7 +163,7 @@ public class URLSession {
     }
      */
     private void sendGETRequest(URLRequest req,
-            DataTaskCompletionHandler completionHandler) {
+            DataTaskCompletion completionHandler) {
 
         HttpURLConnection httpURLConnection = null;
         int respCode = -1;
@@ -72,22 +176,8 @@ public class URLSession {
             httpURLConnection.setDoOutput(true);
             httpURLConnection.setRequestMethod(req.getHttpMethod());
 
-            // Java 7 compatible code
-            Set<Map.Entry<String, String>> allHeaders;
-            allHeaders = req.getAllHttpHeaderFields().entrySet();
-            for (Map.Entry<String, String> header : allHeaders) {
-                String key = header.getKey();
-                String value = header.getValue();
-                httpURLConnection.addRequestProperty(key, value);
-            }
+            addRequestProperties(httpURLConnection, req);
 
-            /*
-        //Java 8 compatible code (Lambda expressions
-        )
-                        request.getAllHttpHeaderFields().forEach((value, field) -> {
-            httpConn.addRequestProperty(field, value);
-        });
-             */
             httpURLConnection.setConnectTimeout(configuration.getConnectTimeout());
             httpURLConnection.setReadTimeout(configuration.getReadTimeout());
             //System.out.println(httpURLConnection.getConnectTimeout());
@@ -119,38 +209,107 @@ public class URLSession {
             HTTPURLResponse resp = null;
             resp = new HTTPURLResponse(req.getUrl(), respCode);
 
-            completionHandler.exec(data, resp, error);
+            completionHandler.run(data, resp, error);
         }
     }
 
-    private void sendHttpRequest(URLRequest request,
-            DataTaskCompletionHandler completionHandler) {
+    private void sendHttpPUTRequest(URLRequest request, Data bodyData,
+            DataTaskCompletion completionHandler) {
 
         HttpURLConnection conn = null;
         int respCode = -1;
         InputStream inStream = null;
         Data data = null;
         Error error = null;
+        HTTPURLResponse resp = null;
 
         try {
             conn = (HttpURLConnection) request.getUrl().openConnection();
-            if (request.getHttpMethod().equals("POST")) {
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod(request.getHttpMethod());
+
+            addRequestProperties(conn, request);
+
+            conn.setConnectTimeout(configuration.getConnectTimeout());
+            conn.setReadTimeout(configuration.getReadTimeout());
+
+            if (bodyData != null) {
+                OutputStream os = conn.getOutputStream();
+                /*InputStream stream = new ByteArrayInputStream(bodyData.toBytes());
+                
+                int i;
+                // read byte by byte until end of stream
+                while ((i = stream.read()) > 0) {
+                    os.write(i);
+                }
+                 */
+                //while (stream.re)
+                os.write(bodyData.toBytes());
+                os.close();
+                //os.flush();
+            }
+
+            respCode = conn.getResponseCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                inStream = conn.getInputStream();
+                data = new Data(inStream);
+                inStream.close();
+            }
+
+            resp = new HTTPURLResponse(request.getUrl(), respCode);
+
+        } catch (IOException e) {
+            error = new Error();
+        }
+
+        if (conn != null) {
+            conn.disconnect();
+        }
+
+        if (completionHandler != null) {
+            completionHandler.run(data, resp, error);
+        }
+    }
+
+    private void addRequestProperties(HttpURLConnection connection,
+            URLRequest request) {
+
+        // Java 7 compatible code
+        Set<Map.Entry<String, String>> allHeaders;
+        allHeaders = request.getAllHttpHeaderFields().entrySet();
+        for (Map.Entry<String, String> header : allHeaders) {
+            String key = header.getKey();
+            String value = header.getValue();
+            connection.addRequestProperty(key, value);
+        }
+
+        ////Java 8 compatible code (Lambda expressions
+        //request.getAllHttpHeaderFields().forEach((value, field) -> {
+        //    connection.addRequestProperty(field, value);
+        //});
+    }
+
+    /* Old Old 
+    private void sendHttpRequest(URLRequest request, Data bodyData,
+            DataTaskCompletionHandler completionHandler, 
+            OutputStream outStream) {
+
+        HttpURLConnection conn = null;
+        int respCode = -1;
+        InputStream inStream = null;
+        Data data = null;
+        Error error = null;
+        HTTPURLResponse resp = null;
+
+        try {
+            conn = (HttpURLConnection) request.getUrl().openConnection();
+            if (request.getHttpMethod().equals("POST") || request.getHttpMethod().equals("PUT")) {
                 conn.setDoOutput(true);
                 conn.setRequestMethod(request.getHttpMethod());
 
-                // Java 7 compatible code
-                Set<Map.Entry<String, String>> allHeaders;
-                allHeaders = request.getAllHttpHeaderFields().entrySet();
-                for (Map.Entry<String, String> header : allHeaders) {
-                    String key = header.getKey();
-                    String value = header.getValue();
-                    conn.addRequestProperty(key, value);
-                }
+                addRequestProperties(conn, request);
 
-                ////Java 8 compatible code (Lambda expressions
-                //request.getAllHttpHeaderFields().forEach((value, field) -> {
-                //    httpConn.addRequestProperty(field, value);
-                //});
                 conn.setConnectTimeout(configuration.getConnectTimeout());
                 conn.setReadTimeout(configuration.getReadTimeout());
 
@@ -158,6 +317,11 @@ public class URLSession {
                     OutputStream os = conn.getOutputStream();
                     os.write(request.getHttpBody().getBytes());
                     os.flush();
+                } else if (bodyData != null) {
+                    OutputStream os = conn.getOutputStream();
+                    os.write(bodyData.toBytes());
+                    os.flush();
+                    //os.close();
                 }
 
             } else { // Method GET
@@ -171,12 +335,12 @@ public class URLSession {
                 inStream = conn.getInputStream();
                 data = new Data(inStream);
                 inStream.close();
-            } else {
-                error = new Error();
             }
 
+            resp = new HTTPURLResponse(request.getUrl(), respCode);
+
         } catch (IOException e) {
-            e.printStackTrace();
+            error = new Error();
         }
 
         if (conn != null) {
@@ -184,31 +348,261 @@ public class URLSession {
         }
 
         if (completionHandler != null) {
-            HTTPURLResponse resp = null;
-            resp = new HTTPURLResponse(request.getUrl(), respCode);
-
-            completionHandler.exec(data, resp, error);
+            completionHandler.run(data, resp, error);
         }
     }
+     */
+    
+    /* Old
+    private void sendHttpRequest(URLRequest request, Data bodyData,
+            DataTaskCompletion completionHandler) {
+
+        HttpURLConnection conn = null;
+        Data data = null;
+        Error error = null;
+        HTTPURLResponse resp = null;
+        int respCode = -1;
+
+        try {
+            conn = (HttpURLConnection) request.getUrl().openConnection();
+            if (request.getHttpMethod().equals("POST") || request.getHttpMethod().equals("PUT")) {
+                conn.setDoOutput(true);
+                conn.setRequestMethod(request.getHttpMethod());
+
+                addRequestProperties(conn, request);
+
+                conn.setConnectTimeout(configuration.getConnectTimeout());
+                conn.setReadTimeout(configuration.getReadTimeout());
+
+                if (!request.getHttpBody().isEmpty()) {
+                    OutputStream os = conn.getOutputStream();
+                    os.write(request.getHttpBody().getBytes());
+                    os.flush();
+                } else if (bodyData != null) {
+                    OutputStream os = conn.getOutputStream();
+                    os.write(bodyData.toBytes());
+                    os.flush();
+                    //os.close();
+                }
+
+            } else { // Method GET
+                conn.setRequestMethod(request.getHttpMethod());
+                conn.setConnectTimeout(configuration.getConnectTimeout());
+                conn.setReadTimeout(configuration.getReadTimeout());
+            }
+
+            respCode = conn.getResponseCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                //inStream = conn.getInputStream();
+                //outStream = new ByteArrayOutputStream(buffer.length);
+                //data = new Data(inStream);
+                data = downloadStreamInData(conn);
+            }
+
+            resp = new HTTPURLResponse(request.getUrl(), respCode);
+
+        } catch (IOException e) {
+            error = new Error();
+        }
+
+        if (conn != null) {
+            conn.disconnect();
+        }
+
+        if (completionHandler != null) {
+            completionHandler.run(data, resp, error);
+        }
+    }
+    */
 
     public URLSessionDataTask dataTask(URLRequest request,
-            DataTaskCompletionHandler completionHandler) {
+            DataTaskCompletion completionHandler) {
 
-        Runnable runnable = new Runnable() {
+        Operation operation = null;
+
+        operation = new BlockOperation(new Runnable() {
             @Override
             public void run() {
                 String method = request.getHttpMethod();
 
                 if (method.equals("GET") || method.equals("POST")) {
-                    sendHttpRequest(request, completionHandler);
+                    sendHttpRequest(request, null, completionHandler);
                 }
             }
-        };
+        });
 
-        return new URLSessionDataTask(workQueue, runnable);
+        return new URLSessionDataTask(workQueue, operation);
     }
 
-    /*
+    public URLSessionUploadTask uploadTask(URLRequest request, Data bodyData,
+            DataTaskCompletion completionHandler) {
+
+        Operation operation = new BlockOperation(new Runnable() {
+            @Override
+            public void run() {
+                String method = request.getHttpMethod();
+
+                if (method.equals("PUT")) {
+                    sendHttpRequest(request, bodyData, completionHandler);
+                }
+            }
+        });
+
+        return new URLSessionUploadTask(workQueue, operation);
+    }
+
+    public URLSessionDownloadTask downloadTask(URLRequest request,
+            DownloadTaskCompletion completionHandler) {
+
+        String protocol = request.getUrl().getProtocol();
+        Operation operation = null;
+
+        if (protocol.equals("http") || protocol.equals("https")) {
+            operation = new BlockOperation(new Runnable() {
+                @Override
+                public void run() {
+
+                    sendHttpRequest(request, null, completionHandler);
+                }
+            });
+        } else {
+            return null;
+        }
+
+        return new URLSessionDownloadTask(workQueue, operation);
+    }
+
+    public URLSessionDownloadTask downloadTask(URL url,
+            DownloadTaskCompletion completionHandler) {
+
+        return downloadTask(new URLRequest(url), completionHandler);
+    }
+
+    private void sendHttpRequest(URLRequest request, Data bodyData,
+            DownloadTaskCompletion completionHandler) {
+
+        HttpURLConnection urlConnection = null;
+        File tempFile = null;
+        InputStream inStream = null;
+        OutputStream outStream = null;
+        URL url = null;
+        URL newURL = null;
+        int respCode = -1;
+        Error error = null;
+        URLResponse resp = null;
+        long contentLength = -1;
+
+        try {
+            url = request.getUrl();
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            // Set configuration
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestMethod(request.getHttpMethod());
+            addRequestProperties(urlConnection, request);
+            urlConnection.setConnectTimeout(configuration.getConnectTimeout());
+            urlConnection.setReadTimeout(configuration.getReadTimeout());
+
+            if (!request.getHttpBody().isEmpty()) {
+                outStream = urlConnection.getOutputStream();
+                uploadStream(outStream, request.getHttpBody().getBytes());
+
+            } else if (bodyData != null) {
+                outStream = urlConnection.getOutputStream();
+                uploadStream(outStream, bodyData.toBytes());
+            }
+
+            respCode = urlConnection.getResponseCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                inStream = urlConnection.getInputStream();
+                contentLength = urlConnection.getContentLengthLong();
+                tempFile = downloadStreamInFile(inStream, contentLength);
+                inStream.close();
+            }
+
+            resp = new HTTPURLResponse(request.getUrl(), respCode);
+
+        } catch (IOException ex) {
+            error = new Error();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+
+        try {
+            newURL = tempFile.toURI().toURL();
+        } catch (MalformedURLException ex) {
+            //Logger.getLogger(URLSession.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (completionHandler != null) {
+            completionHandler.run(newURL, resp, error);
+        }
+
+        if (tempFile != null) {
+            tempFile.delete();
+        }
+    }
+    
+    private void sendHttpRequest(URLRequest request, Data bodyData,
+            DataTaskCompletion completionHandler) {
+
+        HttpURLConnection urlConnection = null;
+        Data data = null;
+        InputStream inStream = null;
+        OutputStream outStream = null;
+        URL url = null;
+        URL newURL = null;
+        int respCode = -1;
+        Error error = null;
+        URLResponse resp = null;
+        long contentLength = -1;
+
+        try {
+            url = request.getUrl();
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            // Set configuration
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestMethod(request.getHttpMethod());
+            addRequestProperties(urlConnection, request);
+            urlConnection.setConnectTimeout(configuration.getConnectTimeout());
+            urlConnection.setReadTimeout(configuration.getReadTimeout());
+
+            if (!request.getHttpBody().isEmpty()) {
+                outStream = urlConnection.getOutputStream();
+                uploadStream(outStream, request.getHttpBody().getBytes());
+
+            } else if (bodyData != null) {
+                outStream = urlConnection.getOutputStream();
+                uploadStream(outStream, bodyData.toBytes());
+            }
+
+            respCode = urlConnection.getResponseCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                inStream = urlConnection.getInputStream();
+                contentLength = urlConnection.getContentLengthLong();
+                data = downloadStreamInData(inStream);
+                inStream.close();
+            }
+
+            resp = new HTTPURLResponse(request.getUrl(), respCode);
+
+        } catch (IOException ex) {
+            error = new Error();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+
+        if (completionHandler != null) {
+            completionHandler.run(data, resp, error);
+        }
+    }
+
+    /* Old Old
     public URLSessionDataTask dataTask(URLRequest req,
             DataTaskCompletionHandler completionHandler) {
 
@@ -231,20 +625,8 @@ public class URLSession {
 
                         httpConn.setRequestMethod(req.getHttpMethod());
 
-                        // Java 7 compatible code
-                        Set<Map.Entry<String, String>> allHeaders;
-                        allHeaders = req.getAllHttpHeaderFields().entrySet();
-                        for (Map.Entry<String, String> header : allHeaders) {
-                            String key = header.getKey();
-                            String value = header.getValue();
-                            httpConn.addRequestProperty(key, value);
-                        }
+                        addRequestProperties(conn, request);
 
-                        
-                        //// Java 8 compatible code (Lambda expressions)
-                        //request.getAllHttpHeaderFields().forEach((value, field) -> {
-                        //    httpConn.addRequestProperty(field, value);
-                        //});
                         
                         httpConn.setConnectTimeout(configuration.getConnectTimeout());
                         httpConn.setReadTimeout(configuration.getReadTimeout());
@@ -300,8 +682,27 @@ public class URLSession {
     }
 
     public URLSessionDataTask dataTask(URL url,
-            DataTaskCompletionHandler completionHandler) {
+            DataTaskCompletion completionHandler) {
 
         return dataTask(new URLRequest(url), completionHandler);
     }
+
+    public interface TaskCompletion {
+    }
+    
+    public interface DataTaskCompletion extends TaskCompletion {
+
+        public abstract void run(Data data, URLResponse response, Error error);
+    }
+
+    public interface DownloadTaskCompletion extends TaskCompletion {
+
+        public abstract void run(URL url, URLResponse response, Error error);
+    }
+    
+    public interface UploadTaskCompletion extends TaskCompletion {
+
+        public abstract void run(URL url, URLResponse response, Error error);
+    }
+
 }

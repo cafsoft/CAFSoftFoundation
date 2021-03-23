@@ -5,16 +5,16 @@
  */
 package cafsoft.foundation;
 
+import java.net.URL;
+
 /**
  *
  * @author ceaufres
  */
-public class URLSessionDataTask extends URLSessionTask{
-    
-    public URLSessionDataTask(OperationQueue newWorkQueue, 
-            Operation newOperation) {
-        
-        super(newWorkQueue, newOperation);
+public class URLSessionDownloadTask extends URLSessionTask {
+
+    public URLSessionDownloadTask(OperationQueue newWQ, Operation newOperation) {
+        super(newWQ, newOperation);
     }
-    
+
 }

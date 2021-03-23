@@ -53,7 +53,7 @@ public class Data {
     }
 
     public Data(URL url)
-            throws IOException, URISyntaxException {
+            throws IOException {
 
         read(url);
     }
@@ -62,7 +62,9 @@ public class Data {
         this.byteData = byteData;
     }
 
-    public Data(InputStream inStream) throws IOException {
+    public Data(InputStream inStream) 
+            throws IOException {
+        
         byteData = getBytes(inStream);
     }
 
@@ -99,12 +101,12 @@ public class Data {
     }
 
     public void read(URL url)
-            throws IOException, URISyntaxException {
+            throws IOException {
 
         final String protocol = url.getProtocol();
 
         if (protocol.equals("file")) {
-            read(url.toURI().getPath());
+            read(url.getPath());
         } else if (protocol.equals("http") || protocol.equals("https")) {
             InputStream inStream = null;
             int response = -1;
