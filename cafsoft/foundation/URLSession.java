@@ -76,7 +76,7 @@ public class URLSession {
             if (bytesRead > 0) {
                 outStream.write(buffer, 0, bytesRead);
                 total += bytesRead;
-                System.out.println("Write bytes: " + total + "/" + contentSize);
+                //System.out.println("Write bytes: " + total + "/" + contentSize);
                 //if (reading != null){
                 //    reading.onReading(bytesRead);
                 //}
@@ -98,7 +98,7 @@ public class URLSession {
 
         return new Data(byteData);
     }
-    
+
     private static File downloadStreamInFile(InputStream inStream,
             long contentLength)
             throws IOException {
@@ -119,8 +119,6 @@ public class URLSession {
 
         outStream.write(bytesBuffer);
     }
-
-    
 
     /*
     private static ByteBuffer getBytes(InputStream inStream)
@@ -348,8 +346,7 @@ public class URLSession {
         }
     }
      */
-    
-    /* Old
+ /* Old
     private void sendHttpRequest(URLRequest request, Data bodyData,
             DataTaskCompletion completionHandler) {
 
@@ -409,8 +406,7 @@ public class URLSession {
             completionHandler.run(data, resp, error);
         }
     }
-    */
-
+     */
     public URLSessionDataTask dataTask(URLRequest request,
             DataTaskCompletion completionHandler) {
 
@@ -493,17 +489,19 @@ public class URLSession {
             urlConnection = (HttpURLConnection) url.openConnection();
 
             // Set configuration
-            urlConnection.setDoOutput(true);
+            //urlConnection.setDoOutput(true);
             urlConnection.setRequestMethod(request.getHttpMethod());
             addRequestProperties(urlConnection, request);
             urlConnection.setConnectTimeout(configuration.getConnectTimeout());
             urlConnection.setReadTimeout(configuration.getReadTimeout());
 
             if (!request.getHttpBody().isEmpty()) {
+                urlConnection.setDoOutput(true);
                 outStream = urlConnection.getOutputStream();
                 uploadStream(outStream, request.getHttpBody().getBytes());
 
             } else if (bodyData != null) {
+                urlConnection.setDoOutput(true);
                 outStream = urlConnection.getOutputStream();
                 uploadStream(outStream, bodyData.toBytes());
             }
@@ -540,7 +538,7 @@ public class URLSession {
             tempFile.delete();
         }
     }
-    
+
     private void sendHttpRequest(URLRequest request, Data bodyData,
             DataTaskCompletion completionHandler) {
 
@@ -560,17 +558,18 @@ public class URLSession {
             urlConnection = (HttpURLConnection) url.openConnection();
 
             // Set configuration
-            urlConnection.setDoOutput(true);
             urlConnection.setRequestMethod(request.getHttpMethod());
             addRequestProperties(urlConnection, request);
             urlConnection.setConnectTimeout(configuration.getConnectTimeout());
             urlConnection.setReadTimeout(configuration.getReadTimeout());
 
             if (!request.getHttpBody().isEmpty()) {
+                urlConnection.setDoOutput(true);
                 outStream = urlConnection.getOutputStream();
                 uploadStream(outStream, request.getHttpBody().getBytes());
 
             } else if (bodyData != null) {
+                urlConnection.setDoOutput(true);
                 outStream = urlConnection.getOutputStream();
                 uploadStream(outStream, bodyData.toBytes());
             }
@@ -685,7 +684,7 @@ public class URLSession {
 
     public interface TaskCompletion {
     }
-    
+
     public interface DataTaskCompletion extends TaskCompletion {
 
         public abstract void run(Data data, URLResponse response, Error error);
@@ -695,7 +694,7 @@ public class URLSession {
 
         public abstract void run(URL url, URLResponse response, Error error);
     }
-    
+
     public interface UploadTaskCompletion extends TaskCompletion {
 
         public abstract void run(URL url, URLResponse response, Error error);
