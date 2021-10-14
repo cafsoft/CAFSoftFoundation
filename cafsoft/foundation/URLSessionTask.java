@@ -5,11 +5,19 @@
  */
 package cafsoft.foundation;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 /**
  *
  * @author ceaufres
  */
-public class URLSessionTask {
+public abstract class URLSessionTask {
+    
+    private int taskIdentifier = 0;
+    private URLSession session = null;
+    private URLRequest request = null;
     
     public enum State {
         RUNNING,
@@ -18,21 +26,73 @@ public class URLSessionTask {
         COMPLETED
     }
 
-    private OperationQueue workQueue = null;
-    private Operation operation = null;
-    //private Future<String> future = null; 
-    //private Thread thread = null;
+    //private OperationQueue workQueue = null;
+    //private Operation operation = null;
 
+    
+    public URLSessionTask(URLSession session, URLRequest request, 
+            int taskIdentifier){
+        
+        this.session = session;
+        this.request = request;
+        this.taskIdentifier = taskIdentifier;
+        
+        //workQueue = newWQ;
+        //operation = newOperation;
+    }
+    
+    /*
     public URLSessionTask(OperationQueue newWQ, Operation newOperation){
         workQueue = newWQ;
         operation = newOperation;
     }
+    */
     
+    
+    protected void uploadStream(OutputStream outStream, byte[] bytesBuffer)
+            throws IOException {
+
+        outStream.write(bytesBuffer);
+    }
+    
+    protected void transfer(InputStream inStream,
+            OutputStream outStream, long contentSize,
+            URLSessionDownloadTask downloadTask)
+            throws IOException {
+
+        final int BUFFER_SIZE = 100 * 1024;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead = 0;
+        int total = 0;
+
+        do {
+            bytesRead = inStream.read(buffer);
+            if (bytesRead > 0) {
+                outStream.write(buffer, 0, bytesRead);
+                total += bytesRead;
+
+                if (getSession().getDelegate() != null) {
+                    URLSessionDownloadDelegate del = null;
+
+                    del = (URLSessionDownloadDelegate) getSession().getDelegate();
+                    del.urlSession(getSession(), downloadTask, bytesRead, total, contentSize);
+                }
+
+            }
+        } while (bytesRead != -1);
+    }
+    
+    
+    public abstract void resume();
+    
+    /*
     public void resume(){
          //future = (Future<String>) workQueue.submit(runnable);
          //thread = new Thread(operation.getcompletionBlock());
          workQueue.addOperation(operation);
-    }
+    }*/
+    
+    
     
     /*
     public boolean cancel(){
@@ -85,4 +145,23 @@ public class URLSessionTask {
         return runnable;
     }
     */
+
+    public URLSession getSession() {
+        return session;
+    }
+
+    /**
+     * @param session the session to set
+     */
+    public void setSession(URLSession session) {
+        this.session = session;
+    }
+
+    /**
+     * @return the request
+     */
+    public URLRequest getRequest() {
+        return request;
+    }
+    
 }

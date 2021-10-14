@@ -14,13 +14,15 @@ import java.util.Queue;
  */
 public class BlockOperation extends Operation {
 
-    private final Queue<Runnable> queue = new LinkedList<>();
+    private Queue<Runnable> queue = null;
 
     public BlockOperation() {
+        queue = new LinkedList<>();
     }
 
     public BlockOperation(Runnable newRunnable) {
-
+        this();
+        
         queue.add(newRunnable);
     }
 
@@ -43,21 +45,25 @@ public class BlockOperation extends Operation {
     public void main() {
         super.main();
 
-        Thread[] threads = new Thread[queue.size()];
+        Thread[] threads = null;
         Thread thread = null;
         int k = 0;
 
+        threads = new Thread[queue.size()];
         for (Runnable runnableBlock : queue) {
             threads[k] = new Thread(runnableBlock);
             k++;
         }
 
+        // execute the first runnable block in main thread (or current thread)
+        threads[0].run();
+        
+        // start the concurrent execution of the others runnable blocks
         for (int i = 1; i < threads.length; i++) {
             threads[i].start();
         }
 
-        threads[0].run();
-
+        // Wait for all executable blocks to finish (Barrier) 
         for (int i = 1; i < threads.length; i++) {
             try {
                 threads[i].join();

@@ -14,6 +14,8 @@ public class URLSessionConfiguration {
     private int connectTimeout = 0;
     private int readTimeout = 0;
 
+    //private static URLSessionConfiguration _default = null;
+    
     /**
      * @return the connectTimeout
      */
@@ -46,4 +48,9 @@ public class URLSessionConfiguration {
         }
     }
 
+    /*
+    public static URLSessionConfiguration getDefault() {
+        return _default;
+    }
+    */
 }
