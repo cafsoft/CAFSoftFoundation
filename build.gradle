@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.google.guava:guava:29.0-jre'
+  compile 'com.google.guava:guava:18.0'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -45,6 +45,6 @@ install {
 }
 
 wrapper {
-    gradleVersion = "7.0.2"
+    gradleVersion = "5.1.1"
     distributionType = Wrapper.DistributionType.ALL
 }
