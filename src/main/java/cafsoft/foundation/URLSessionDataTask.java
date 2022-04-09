@@ -96,7 +96,7 @@ public class URLSessionDataTask extends URLSessionTask {
                 inStream = urlConnection.getInputStream();
                 try {
                     contentLength = urlConnection.getContentLengthLong();
-                } catch (UnsupportedOperationException e) {
+                } catch (NoSuchMethodError e) {
                     contentLength = urlConnection.getContentLength();
                 }
                 data = downloadStreamInData(inStream);

@@ -116,7 +116,7 @@ public class URLSessionDownloadTask
                 inStream = urlConnection.getInputStream();
                 try {
                     contentLength = urlConnection.getContentLengthLong();
-                } catch (UnsupportedOperationException e) {
+                } catch (NoSuchMethodError e) {
                     contentLength = urlConnection.getContentLength();
                 }
                 tempFile = downloadStreamInFile(inStream, contentLength, downloadTask);
