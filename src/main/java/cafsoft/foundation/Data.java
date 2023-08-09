@@ -14,22 +14,18 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Base64;
 import java.util.Date;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 //
 //  Data.java
 //
 //  Created by Cesar Franco on 10/07/16.
-//  Copyright © 2015 - 2018 Cesar Franco. All rights reserved.
+//  Copyright © 2015 - 2023 Cesar Franco. All rights reserved.
 //
 /**
- * @version 1.0.0
- * @since 1.0.0
+ * @author Cesar Franco (ceaufres)
+ * @version 1.0.1 2023/08/08
  */
 public class Data {
 
@@ -210,6 +206,10 @@ public class Data {
         return byteData.equals(other.byteData);
     }
 
+    public String base64EncodedString(){
+        return Base64.getEncoder().encodeToString(toBytes());
+    }
+    
     public static Data dataWithContentsOfURL(URL url)
             throws IOException, URISyntaxException {
 
