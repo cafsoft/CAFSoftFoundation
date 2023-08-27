@@ -7,6 +7,8 @@ package cafsoft.foundation;
 
 import cafsoft.foundation.URLSession.DataTaskCompletion;
 //import static cafsoft.foundation.URLSession.addRequestProperties;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,19 +66,26 @@ public class URLSessionDataTask extends URLSessionTask {
         Error error = null;
         URLResponse resp = null;
         long contentLength = -1;
-        URLSession session = null;
+        // URLSession session = null;
         URLSessionConfiguration configuration = null;
 
         try {
             url = request.getUrl();
             urlConnection = (HttpURLConnection) url.openConnection();
 
+            //session = getSession();
+            configuration = getSession().getConfiguration();
+
             // Set configuration
+            if (urlConnection instanceof HttpsURLConnection) {
+                HttpsURLConnection httpsURLConnection = (HttpsURLConnection) urlConnection;
+                SSLContext context = configuration.getSSLContext();
+                if (context != null){
+                    httpsURLConnection.setSSLSocketFactory(context.getSocketFactory());
+                }
+            }
             urlConnection.setRequestMethod(request.getHttpMethod());
             URLSession.addRequestProperties(urlConnection, request);
-            
-            session = getSession();
-            configuration = session.getConfiguration();
 
             urlConnection.setConnectTimeout(configuration.getConnectTimeout());
             urlConnection.setReadTimeout(configuration.getReadTimeout());
@@ -94,6 +103,15 @@ public class URLSessionDataTask extends URLSessionTask {
             respCode = urlConnection.getResponseCode();
             if (respCode == HttpURLConnection.HTTP_OK) {
                 inStream = urlConnection.getInputStream();
+                try {
+                    contentLength = urlConnection.getContentLengthLong();
+                } catch (NoSuchMethodError e) {
+                    contentLength = urlConnection.getContentLength();
+                }
+                data = downloadStreamInData(inStream);
+                inStream.close();
+            }else{
+                inStream = urlConnection.getErrorStream();
                 try {
                     contentLength = urlConnection.getContentLengthLong();
                 } catch (NoSuchMethodError e) {

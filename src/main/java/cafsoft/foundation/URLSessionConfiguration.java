@@ -5,6 +5,8 @@
  */
 package cafsoft.foundation;
 
+import javax.net.ssl.SSLContext;
+
 /**
  *
  * @author ceaufres
@@ -13,6 +15,7 @@ public class URLSessionConfiguration {
 
     private int connectTimeout = 0;
     private int readTimeout = 0;
+    private SSLContext _SSLContext = null;
 
     //private static URLSessionConfiguration _default = null;
     
@@ -48,9 +51,16 @@ public class URLSessionConfiguration {
         }
     }
 
-    /*
+
     public static URLSessionConfiguration getDefault() {
-        return _default;
+        return new URLSessionConfiguration();
     }
-    */
+
+    public SSLContext getSSLContext() {
+        return _SSLContext;
+    }
+
+    public void setSSLContext(SSLContext newSSLContext) {
+        this._SSLContext = newSSLContext;
+    }
 }

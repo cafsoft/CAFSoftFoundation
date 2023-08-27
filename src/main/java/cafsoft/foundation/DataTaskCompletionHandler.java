@@ -9,8 +9,9 @@ package cafsoft.foundation;
  *
  * @author ceaufres
  */
-public interface DataTaskCompletionHandler {
+public interface DataTaskCompletionHandler 
+        extends Behavior {
     
-    public abstract void exec(Data data, URLResponse response, Error error);
+    public abstract void run(Data data, URLResponse response, Error error);
     
 }

@@ -26,8 +26,6 @@ public class URLRequest{
         return url;
     }
     
-    
-    
     public void setHttpMethod(String newHttpMethod){
         httpMethod = newHttpMethod;
     }
@@ -56,5 +54,5 @@ public class URLRequest{
     public HashMap<String, String> getAllHttpHeaderFields(){
         return httpHeaderFields;
     }
-    
+
 }

@@ -40,7 +40,7 @@ public class OperationQueue {
                         @Override
                         public void run() {
 
-                            System.out.println("New thread " + k2);
+                            //System.out.println("New thread " + k2);
                             executeOperations(k2);
                         }
                     });
@@ -86,7 +86,7 @@ public class OperationQueue {
             }
             if (operation != null) {
                 //operation.getcompletionBlock().run();
-                System.out.println("Thread " + threadNumber);
+                //System.out.println("Thread " + threadNumber);
                 operation.start();
 
             }
