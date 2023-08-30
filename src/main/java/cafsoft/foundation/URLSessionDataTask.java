@@ -9,6 +9,7 @@ import cafsoft.foundation.URLSession.DataTaskCompletion;
 //import static cafsoft.foundation.URLSession.addRequestProperties;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -79,9 +80,9 @@ public class URLSessionDataTask extends URLSessionTask {
             // Set configuration
             if (urlConnection instanceof HttpsURLConnection) {
                 HttpsURLConnection httpsURLConnection = (HttpsURLConnection) urlConnection;
-                SSLContext context = configuration.getSSLContext();
-                if (context != null){
-                    httpsURLConnection.setSSLSocketFactory(context.getSocketFactory());
+                SSLSocketFactory socketFactory = configuration.getSocketFactory();
+                if (socketFactory != null){
+                    httpsURLConnection.setSSLSocketFactory(socketFactory);
                 }
             }
             urlConnection.setRequestMethod(request.getHttpMethod());
