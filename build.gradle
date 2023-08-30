@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group = 'cafsoft.foundation'
-version '2.5.5'
+version '2.5.6'
 
 sourceCompatibility = 1.8 // java 8
 targetCompatibility = 1.8
@@ -12,7 +12,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId = 'cafsoft.foundation'
             artifactId = 'library'
-            version = '2.5.5'
+            version = '2.5.6'
 
             from components.java
         }
