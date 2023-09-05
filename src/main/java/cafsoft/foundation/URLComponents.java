@@ -7,7 +7,11 @@ package cafsoft.foundation;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.StringJoiner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -17,90 +21,65 @@ public class URLComponents {
 
     // A basic URL syntax can be generalized as:
     // scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
-    private String scheme = "";
-    private String user = "";
-    private String password = "";
-    private String host = "";
-    private int port = -1;
-    private String path = "";
-    private URLQueryItem[] queryItems = {};
-    private String fragment = "";
+    private final String SCHEME = "(http|https|file)";
+    private final String USER = "([^:@\\/\\?#]+)";
+    private final String PASSWORD = "([^@\\/\\?#]+)?";
+    private final String HOST = "([^:\\/?#]+)";
+    private final String PORT = "(\\d+)?";
+    private final String PATH = "(\\/[^?#]*)?";
+    private final String QUERY = "(?:\\?([^#]*))?";
+    private final String FRAGMENT = "(?:#(.*))?";
+
+    private String scheme;
+    private String host;
+    private int port;
+    private String user;
+    private String password;
+    private String path;
+    //private String query;
+    private ArrayList<URLQueryItem> queryItems = new ArrayList<>();
+    private String fragment;
+
+    private final String REGEXP = "^" + SCHEME + ":\\/\\/" + "(?:" + USER + ":" + PASSWORD + "@)?" + HOST + ":" + PORT + PATH + QUERY + FRAGMENT + "$";
+
 
     public URLComponents() {
         super();
     }
 
     public URLComponents(String stringURL) {
-        String[] parts = {};
-        String _scheme = null;
-        String _fragment = null;
-        String[] userPassword = {};
-        String[] hostPort = {};
-        String host = "";
-        String port = "";
-        String user = null;
-        String password = null;
-        String path = "";
-        String queryFragment = null;
-        String query = null;
+        Pattern pattern = Pattern.compile(REGEXP);
+        Matcher matcher = pattern.matcher(stringURL);
+        String query = "";
 
-        parts = stringURL.split("://", 2);
-        if (parts[0].equals("http") || parts[0].equals("https")) {
-            _scheme = parts[0];
-
-            if (parts[1].contains("@")) {
-                parts = parts[1].split("@", 2);
-                userPassword = parts[0].split(":");
-                user = userPassword[0];
-                password = userPassword[1];
+        if (matcher.matches()) {
+            scheme = matcher.group(1);
+            user = matcher.group(2);
+            password = matcher.group(3);
+            host = matcher.group(4);
+            if (host == null)
+                host = "";
+            try{
+                port = Integer.parseInt(matcher.group(5));
+            }catch (NumberFormatException e){
+                port = -1;
             }
+            path = matcher.group(6);
+            query = matcher.group(7);
+            fragment = matcher.group(8);
 
-            if (parts[1].contains("#")) {
-                parts = parts[1].split("#", 2);
-                _fragment = parts[1];
-                parts[1] = parts[0];
-            }
-
-            if (parts[1].contains("?")) {
-                parts = parts[1].split("\\?", 2);
-            }
-
-            System.out.println("parts[1] = " + parts[1]);
-
-            if (parts[0].contains("/")) {
-                parts = parts[0].split("/", 2);
-                path = "/" + parts[1];
-            }
-
-            if (parts[0].contains(":")) {
-                hostPort = parts[0].split(":", 2);
-                host = hostPort[0];
-                port = hostPort[1];
-            }
-
-            /*
-            parts = parts[1].split("\\?");
-
-            queryFragment = parts[1];
-
-            parts = queryFragment.split("#");
-            query = parts[0];
-            _fragment = parts[1];
-             */
+            if (query != null) {
+                String[] params = query.split("&");
+                queryItems = new ArrayList<>();
+                for (int k = 0; k < params.length; k++) {
+                    String[] values = params[k].split("=");
+                    queryItems.add(new URLQueryItem(values[0], values[1]));
+                }
+            }else
+                query = "";
+        } else {
+            throw new IllegalArgumentException("Invalid URL format");
         }
-        
-
-        System.out.println("scheme = " + _scheme);
-        System.out.println("user = " + user);
-        System.out.println("password = " + password);
-        System.out.println("host = " + host);
-        System.out.println("port = " + port);
-        System.out.println("path = " + path);
-
-        System.out.println(query);
-
-        System.out.println("fragment = " + _fragment);
-
     }
 
     public String getScheme() {
@@ -129,9 +108,9 @@ public class URLComponents {
         sb.append("://");
 
         // user:password
-        if (!user.isEmpty()) {
+        if ((user != null) && !user.isEmpty()) {
             sb.append(user);
-            if (!password.isEmpty()) {
+            if ((password != null) && (password.isEmpty())) {
                 sb.append(":");
                 sb.append(password);
             }
@@ -146,12 +125,12 @@ public class URLComponents {
         }
 
         // path
-        if (!path.isEmpty()) {
+        if ((path !=null) && !path.isEmpty()) {
             sb.append(path);
         }
 
         // query
-        if (queryItems.length > 0) {
+        if (queryItems != null & queryItems.size() > 0) {
             for (URLQueryItem queryItem : queryItems) {
                 sj.add(queryItem.toString());
             }
@@ -160,7 +139,7 @@ public class URLComponents {
         }
 
         // fragment
-        if (!fragment.isEmpty()) {
+        if ((fragment != null) && !fragment.isEmpty()) {
             sb.append("#");
             sb.append(fragment);
         }
@@ -220,7 +199,7 @@ public class URLComponents {
     /**
      * @return the queryItems
      */
-    public URLQueryItem[] getQueryItems() {
+    public ArrayList<URLQueryItem> getQueryItems() {
         return queryItems;
     }
 
@@ -228,7 +207,32 @@ public class URLComponents {
      * @param queryItems the queryItems to set
      */
     public void setQueryItems(URLQueryItem[] queryItems) {
-        this.queryItems = queryItems;
+        this.queryItems = new ArrayList<>();
+        this.queryItems.addAll(Arrays.asList(queryItems));
+    }
+
+    public String getQuery(){
+        if ((queryItems != null) && !queryItems.isEmpty()) {
+            StringJoiner sj = new StringJoiner("&");
+            for (URLQueryItem queryItem : queryItems) {
+                sj.add(queryItem.toString());
+            }
+
+            return sj.toString();
+        }
+
+        return null;
+    }
+
+    public void setQuery(String newQuery){
+        if (newQuery != null) {
+            String[] params = newQuery.split("&");
+            queryItems = new ArrayList<>();
+            for (int k = 0; k < params.length; k++) {
+                String[] values = params[k].split("=");
+                queryItems.add(new URLQueryItem(values[0], values[1]));
+            }
+        }
     }
 
     /**
@@ -249,7 +253,7 @@ public class URLComponents {
      * @return the path
      */
     public String getPath() {
-        return path;
+        return (path != null) ? path : "";
     }
 
     /**

@@ -66,7 +66,7 @@ public class URLQueryItem {
             encValue = value;
         }
         
-        System.out.println(name + ":" + encValue);
+        //System.out.println(name + ":" + encValue);
         return name + "=" + encValue;
     }
     
