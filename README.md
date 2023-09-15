@@ -1,6 +1,6 @@
 # CAFSoftFoundation
 
-[![](https://jitpack.io/v/cesarfrancoe/CAFSoftFoundation.svg)](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
+[![](https://jitpack.io/v/cafsoft/CAFSoftFoundation.svg)](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
 
 
 [https://jitpack.io/#cesarfrancoe/CAFSoftFoundation](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
@@ -14,7 +14,7 @@ To install the library add:
         maven { url "https://jitpack.io" }
    }
    dependencies {
-         implementation 'com.github.cesarfrancoe:CAFSoftFoundation:2.5.7'
+         implementation 'com.github.cafsoft:CAFSoftFoundation:2.5.7'
    }
    ```  
 
