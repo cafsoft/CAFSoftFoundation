@@ -3,7 +3,7 @@
 [![](https://jitpack.io/v/cafsoft/CAFSoftFoundation.svg)](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
 
 
-[https://jitpack.io/#cesarfrancoe/CAFSoftFoundation](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
+[https://jitpack.io/#cafsoft/CAFSoftFoundation](https://jitpack.io/#cesarfrancoe/CAFSoftFoundation)
 
 
 To install the library add: 
