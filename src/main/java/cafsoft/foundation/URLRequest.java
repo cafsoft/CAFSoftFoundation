@@ -42,12 +42,19 @@ public class URLRequest{
         return httpBody;
     }
 
-/*    
-    public void setValue(String value, String field){
+    public void addValue(String value, String field){
+        String headerValue = httpHeaderFields.get(field);
+        if (headerValue == null){
+            httpHeaderFields.put(field, value);
+        }else{
+            if (!headerValue.contains("value")){
+                httpHeaderFields.put(field, headerValue + ", " + value);
+            }
+        }
+
     }
-*/
     
-    public void addValue(String field, String value){
+    public void setValue(String value, String field){
         httpHeaderFields.put(field, value);
     }
     
