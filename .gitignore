@@ -5,6 +5,7 @@ build/
 !**/src/test/**/build/
 
 ### IntelliJ IDEA ###
+.idea/uiDesigner.xml
 .idea/compiler.xml
 .idea/gradle.xml
 .idea/jarRepositories.xml
@@ -44,3 +45,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### IntelliJ IDEA - Test codes ###
+/src/main/java/test/
