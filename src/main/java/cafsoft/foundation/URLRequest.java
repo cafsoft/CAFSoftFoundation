@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class URLRequest{
     private URL url = null;
     private String httpMethod = "GET";
-    private String httpBody = "";
+    private Data httpBody = null;
     private HashMap<String, String> httpHeaderFields = new HashMap<>();
 
     public URLRequest(URL url){
@@ -34,11 +34,11 @@ public class URLRequest{
         return httpMethod;
     }
 
-    public void setHttpBody(String httpBody) {
+    public void setHttpBody(String newData) {
         this.httpBody = httpBody;
     }
 
-    public String getHttpBody() {
+    public Data getHttpBody() {
         return httpBody;
     }
 

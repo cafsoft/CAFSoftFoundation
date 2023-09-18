@@ -183,9 +183,9 @@ public class URLSession {
             //System.out.println(httpURLConnection.getReadTimeout());
 
             if (req.getHttpMethod().equals("POST")) {
-                if (!req.getHttpBody().isEmpty()) {
+                if (req.getHttpBody() != null) {
                     OutputStream os = httpURLConnection.getOutputStream();
-                    os.write(req.getHttpBody().getBytes());
+                    os.write(req.getHttpBody().toBytes());
                     os.flush();
                 }
             }

@@ -81,10 +81,10 @@ public class URLSessionUploadTask extends URLSessionTask {
 
             urlConnection.setConnectTimeout(configuration.getConnectTimeout());
             urlConnection.setReadTimeout(configuration.getReadTimeout());
-            if (!request.getHttpBody().isEmpty()) {
+            if (request.getHttpBody() != null) {
                 urlConnection.setDoOutput(true);
                 outStream = urlConnection.getOutputStream();
-                uploadStream(outStream, request.getHttpBody().getBytes());
+                uploadStream(outStream, request.getHttpBody().toBytes());
 
             } else if (bodyData != null) {
                 urlConnection.setDoOutput(true);
