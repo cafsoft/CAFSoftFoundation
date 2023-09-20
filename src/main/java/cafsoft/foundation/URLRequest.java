@@ -34,8 +34,8 @@ public class URLRequest{
         return httpMethod;
     }
 
-    public void setHttpBody(String newData) {
-        this.httpBody = httpBody;
+    public void setHttpBody(Data newData) {
+        this.httpBody = newData;
     }
 
     public Data getHttpBody() {
@@ -47,7 +47,7 @@ public class URLRequest{
         if (headerValue == null){
             httpHeaderFields.put(field, value);
         }else{
-            if (!headerValue.contains("value")){
+            if (!headerValue.contains(value)){
                 httpHeaderFields.put(field, headerValue + ", " + value);
             }
         }
