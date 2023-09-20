@@ -25,14 +25,14 @@ public class URLComponents {
     private final String USER = "([^:@\\/\\?#]+)";
     private final String PASSWORD = "([^@\\/\\?#]+)?";
     private final String HOST = "([^:\\/?#]+)";
-    private final String PORT = "(\\d+)?";
+    private final String PORT = "(?::(\\d+))?";
     private final String PATH = "(\\/[^?#]*)?";
     private final String QUERY = "(?:\\?([^#]*))?";
     private final String FRAGMENT = "(?:#(.*))?";
 
     private String scheme;
     private String host;
-    private int port;
+    private int port = -1;
     private String user;
     private String password;
     private String path;
@@ -40,7 +40,7 @@ public class URLComponents {
     private ArrayList<URLQueryItem> queryItems = new ArrayList<>();
     private String fragment;
 
-    private final String REGEXP = "^" + SCHEME + ":\\/\\/" + "(?:" + USER + ":" + PASSWORD + "@)?" + HOST + ":" + PORT + PATH + QUERY + FRAGMENT + "$";
+    private final String REGEXP = "^" + SCHEME + ":\\/\\/" + "(?:" + USER + ":" + PASSWORD + "@)?" + HOST + PORT + PATH + QUERY + FRAGMENT + "$";
 
 
     public URLComponents() {
@@ -60,7 +60,8 @@ public class URLComponents {
             if (host == null)
                 host = "";
             try{
-                port = Integer.parseInt(matcher.group(5));
+                String strPort = matcher.group(5);
+                port = Integer.parseInt(strPort);
             }catch (NumberFormatException e){
                 port = -1;
             }
