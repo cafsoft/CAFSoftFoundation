@@ -275,18 +275,19 @@ public class URLSession {
             URLRequest request) {
 
         // Java 7 compatible code
+        /*
         Set<Map.Entry<String, String>> allHeaders;
         allHeaders = request.getAllHttpHeaderFields().entrySet();
         for (Map.Entry<String, String> header : allHeaders) {
             String key = header.getKey();
             String value = header.getValue();
             connection.addRequestProperty(key, value);
-        }
+        }*/
 
-        ////Java 8 compatible code (Lambda expressions
-        //request.getAllHttpHeaderFields().forEach((value, field) -> {
-        //    connection.addRequestProperty(field, value);
-        //});
+        // Java 8 compatible code
+        request.getAllHttpHeaderFields().forEach((fieldKey, fieldValue) -> {
+            connection.addRequestProperty(fieldKey, fieldValue);
+        });
     }
 
     /* Old Old 
