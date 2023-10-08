@@ -494,19 +494,20 @@ public class URLSession {
             DataTaskCompletion completionHandler) {
 
         String protocol = request.getUrl().getProtocol();
-        String method = request.getHttpMethod();
         URLSessionDataTask dataTask = null;
 
         if (protocol.equals("http") || protocol.equals("https")) {
+            String[] methods = {"GET", "POST", "PUT", "DELETE"};
 
-            if (method.equals("GET") || method.equals("POST")) {
-                //sendHttpRequest(request, null, completionHandler);
-
-                dataTask = new URLSessionDataTask(this, request, 0,
-                        workQueue, completionHandler);
+            for (String method : methods){
+                if (request.getHttpMethod().equals(method)) {
+                    //sendHttpRequest(request, null, completionHandler);
+                    dataTask = new URLSessionDataTask(this, request, 0,
+                            workQueue, completionHandler);
+                    break;
+                }
             }
-        } else {
-            return null;
+
         }
 
         return dataTask;
