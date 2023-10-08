@@ -54,7 +54,6 @@ public class URLSessionDataTask extends URLSessionTask {
     }
 
     private void sendHttpRequest(URLRequest request, 
-            Data bodyData,
             DataTaskCompletion completionHandler) {
 
         HttpURLConnection urlConnection = null;
@@ -95,11 +94,11 @@ public class URLSessionDataTask extends URLSessionTask {
                 outStream = urlConnection.getOutputStream();
                 uploadStream(outStream, request.getHttpBody().toBytes());
 
-            } else if (bodyData != null) {
+            } /*else if (bodyData != null) {
                 urlConnection.setDoOutput(true);
                 outStream = urlConnection.getOutputStream();
                 uploadStream(outStream, bodyData.toBytes());
-            }
+            }*/
 
             respCode = urlConnection.getResponseCode();
             if (respCode == HttpURLConnection.HTTP_OK) {
@@ -140,7 +139,7 @@ public class URLSessionDataTask extends URLSessionTask {
     @Override
     public void resume() {
         Operation operation = new BlockOperation(() -> {
-            sendHttpRequest(getRequest(), null, completionHandler);
+            sendHttpRequest(getRequest(), completionHandler);
         });
 
         queue.addOperation(operation);
