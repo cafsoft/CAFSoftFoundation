@@ -5,9 +5,13 @@
  */
 package cafsoft.foundation;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 
 /**
  *
@@ -54,7 +58,8 @@ public abstract class URLSessionTask {
 
         outStream.write(bytesBuffer);
     }
-    
+
+
     protected void transfer(InputStream inStream,
             OutputStream outStream, long contentSize,
             URLSessionDownloadTask downloadTask)
@@ -81,7 +86,46 @@ public abstract class URLSessionTask {
             }
         } while (bytesRead != -1);
     }
-    
+
+    public void addRequestProperties(HttpURLConnection connection) {
+
+        URLRequest request = getRequest();
+
+        request.getAllHttpHeaderFields().forEach((fieldKey, fieldValue) -> {
+            connection.addRequestProperty(fieldKey, fieldValue);
+        });
+    }
+
+    protected void configureHTTPURLConnection(HttpURLConnection connection)
+            throws ProtocolException {
+
+        URLSessionConfiguration configuration = getSession().getConfiguration();
+
+        if (connection instanceof HttpsURLConnection) {
+            HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
+            SSLSocketFactory socketFactory = configuration.getSocketFactory();
+            if (socketFactory != null){
+                httpsURLConnection.setSSLSocketFactory(socketFactory);
+            }
+        }
+        connection.setRequestMethod(request.getHttpMethod());
+        addRequestProperties(connection);
+
+        connection.setConnectTimeout(configuration.getConnectTimeout());
+        connection.setReadTimeout(configuration.getReadTimeout());
+    }
+
+    protected void sendBody(HttpURLConnection connection)
+            throws IOException {
+
+        URLRequest request = getRequest();
+
+        if (request.getHttpBody() != null) {
+            connection.setDoOutput(true);
+            OutputStream outStream = connection.getOutputStream();
+            uploadStream(outStream, request.getHttpBody().toBytes());
+        }
+    }
     
     public abstract void resume();
     
