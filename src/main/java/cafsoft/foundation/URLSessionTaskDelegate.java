@@ -10,7 +10,5 @@ package cafsoft.foundation;
  * @author ceaufres
  */
 public interface URLSessionTaskDelegate {
- 
-    public abstract void execute();
-    
+    void run();
 }
