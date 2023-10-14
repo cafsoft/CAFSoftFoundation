@@ -66,50 +66,28 @@ public class URLSessionDownloadTask
         return tempFile;
     }
 
-    private void sendHttpRequest(Data bodyData,
-            DownloadTaskCompletion completionHandler,
+    private void sendHttpRequest(DownloadTaskCompletion completionHandler,
             URLSessionDownloadTask downloadTask) {
 
         HttpURLConnection urlConnection = null;
         File tempFile = null;
         InputStream inStream = null;
-        OutputStream outStream = null;
-        URL url = null;
         URL newURL = null;
         int respCode = -1;
         Error error = null;
+        URLRequest request = null;
         URLResponse resp = null;
         long contentLength = -1;
-        URLSession session = null;
         URLSessionConfiguration configuration = null;
-        URLRequest request = null;
 
         request = getRequest();
         try {
-            url = request.getUrl();
-            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection = (HttpURLConnection) request.getUrl().openConnection();
 
             // Set configuration
-            //urlConnection.setDoOutput(true);
-            urlConnection.setRequestMethod(request.getHttpMethod());
-            URLSession.addRequestProperties(urlConnection, request);
+            configureHTTPURLConnection(urlConnection);
 
-            session = getSession();
-            configuration = session.getConfiguration();
-
-            urlConnection.setConnectTimeout(configuration.getConnectTimeout());
-            urlConnection.setReadTimeout(configuration.getReadTimeout());
-
-            if (request.getHttpBody() != null) {
-                urlConnection.setDoOutput(true);
-                outStream = urlConnection.getOutputStream();
-                uploadStream(outStream, request.getHttpBody().toBytes());
-
-            } else if (bodyData != null) {
-                urlConnection.setDoOutput(true);
-                outStream = urlConnection.getOutputStream();
-                uploadStream(outStream, bodyData.toBytes());
-            }
+            sendBody(urlConnection);
 
             respCode = urlConnection.getResponseCode();
             if (respCode == HttpURLConnection.HTTP_OK) {
@@ -122,7 +100,16 @@ public class URLSessionDownloadTask
                 tempFile = downloadStreamInFile(inStream, contentLength, downloadTask);
                 inStream.close();
                 newURL = tempFile.toURI().toURL();
-            }
+            }/*else{
+                inStream = urlConnection.getErrorStream();
+                try {
+                    contentLength = urlConnection.getContentLengthLong();
+                } catch (NoSuchMethodError e) {
+                    contentLength = urlConnection.getContentLength();
+                }
+                data = downloadStreamInData(inStream);
+                inStream.close();
+            }*/
 
             resp = new HTTPURLResponse(request.getUrl(), respCode);
 
@@ -155,10 +142,9 @@ public class URLSessionDownloadTask
     @Override
     public void resume() {
         Operation operation = new BlockOperation(() -> {
-            sendHttpRequest(null, completionHandler, this);
+            sendHttpRequest(completionHandler, this);
         });
 
         queue.addOperation(operation);
-
     }
 }
