@@ -6,16 +6,10 @@
 package cafsoft.foundation;
 
 import cafsoft.foundation.URLSession.DataTaskCompletion;
-//import static cafsoft.foundation.URLSession.addRequestProperties;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.ByteBuffer;
 
 /**
@@ -53,52 +47,25 @@ public class URLSessionDataTask extends URLSessionTask {
         return new Data(byteData);
     }
 
-    private void sendHttpRequest(URLRequest request, 
-            DataTaskCompletion completionHandler) {
+    private void sendHttpRequest(DataTaskCompletion completionHandler) {
 
         HttpURLConnection urlConnection = null;
         Data data = null;
         InputStream inStream = null;
-        OutputStream outStream = null;
-        URL url = null;
-        URL newURL = null;
         int respCode = -1;
         Error error = null;
+        URLRequest request = null;
         URLResponse resp = null;
         long contentLength = -1;
-        // URLSession session = null;
-        URLSessionConfiguration configuration = null;
 
+        request = getRequest();
         try {
-            url = request.getUrl();
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            //session = getSession();
-            configuration = getSession().getConfiguration();
+            urlConnection = (HttpURLConnection) request.getUrl().openConnection();
 
             // Set configuration
-            if (urlConnection instanceof HttpsURLConnection) {
-                HttpsURLConnection httpsURLConnection = (HttpsURLConnection) urlConnection;
-                SSLSocketFactory socketFactory = configuration.getSocketFactory();
-                if (socketFactory != null){
-                    httpsURLConnection.setSSLSocketFactory(socketFactory);
-                }
-            }
-            urlConnection.setRequestMethod(request.getHttpMethod());
-            URLSession.addRequestProperties(urlConnection, request);
+            configureHTTPURLConnection(urlConnection);
 
-            urlConnection.setConnectTimeout(configuration.getConnectTimeout());
-            urlConnection.setReadTimeout(configuration.getReadTimeout());
-            if (request.getHttpBody() != null) {
-                urlConnection.setDoOutput(true);
-                outStream = urlConnection.getOutputStream();
-                uploadStream(outStream, request.getHttpBody().toBytes());
-
-            } /*else if (bodyData != null) {
-                urlConnection.setDoOutput(true);
-                outStream = urlConnection.getOutputStream();
-                uploadStream(outStream, bodyData.toBytes());
-            }*/
+            sendBody(urlConnection);
 
             respCode = urlConnection.getResponseCode();
             if (respCode == HttpURLConnection.HTTP_OK) {
@@ -139,7 +106,7 @@ public class URLSessionDataTask extends URLSessionTask {
     @Override
     public void resume() {
         Operation operation = new BlockOperation(() -> {
-            sendHttpRequest(getRequest(), completionHandler);
+            sendHttpRequest(completionHandler);
         });
 
         queue.addOperation(operation);
