@@ -9,6 +9,11 @@ package cafsoft.foundation;
  *
  * @author ceaufres
  */
-public interface URLSessionTaskDelegate {
-    void run();
+public interface URLSessionTaskDelegate
+        extends URLSessionDelegate{
+    default void urlSession(URLSession session,
+                    URLSessionTask task,
+                    long bytesSent, long totalBytesSent,
+                    long totalBytesExpectedToSend){
+    }
 }
