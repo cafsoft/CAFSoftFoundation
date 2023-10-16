@@ -12,9 +12,10 @@ package cafsoft.foundation;
 public interface URLSessionDownloadDelegate
         extends URLSessionDelegate {
 
-    public void urlSession(URLSession session,
-            URLSessionDownloadTask downloadTask,
-            long bytesWritten, long totalBytesWritten,
-            long totalBytesExpectedToWrite);
+    default void urlSession(URLSession session,
+                    URLSessionDownloadTask task,
+                    long bytesWritten, long totalBytesWritten,
+                    long totalBytesExpectedToWrite){
+    }
     
 }
