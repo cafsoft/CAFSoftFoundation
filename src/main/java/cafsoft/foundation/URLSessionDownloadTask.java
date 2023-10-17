@@ -50,9 +50,41 @@ public class URLSessionDownloadTask
         
         super(session, request, taskIdentifier, operation);*/
     //}
+    @Override
+    protected void download(InputStream source,
+                            OutputStream destination,
+                            long contentSize)
+            throws IOException {
+
+        final int BUFFER_SIZE = 100 * 1024;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytes = 0;
+        int totalBytes = 0;
+
+        if (this.getSession().getDelegate() instanceof URLSessionDownloadDelegate) {
+            URLSessionDownloadDelegate delegate = null;
+
+            delegate = (URLSessionDownloadDelegate) getSession().getDelegate();
+
+            bytes = source.read(buffer);
+            while (bytes != -1) {
+                destination.write(buffer, 0, bytes);
+                totalBytes += bytes;
+                delegate.urlSession(getSession(), this, bytes, totalBytes, contentSize);
+
+                bytes = source.read(buffer);
+            }
+        }else{
+            bytes = source.read(buffer);
+            while (bytes != -1) {
+                destination.write(buffer, 0, bytes);
+                bytes = source.read(buffer);
+            }
+        }
+    }
+
     private File downloadStreamInFile(InputStream inStream,
-            long contentLength, 
-            URLSessionDownloadTask downloadTask)
+            long contentLength)
             throws IOException {
 
         FileOutputStream outStream = null;
@@ -60,15 +92,13 @@ public class URLSessionDownloadTask
 
         tempFile = File.createTempFile("tmp", ".tmp");
         outStream = new FileOutputStream(tempFile);
-        transfer(inStream, outStream, contentLength, downloadTask);
+        download(inStream, outStream, contentLength);
         outStream.close();
 
         return tempFile;
     }
 
-    private void sendHttpRequest(DownloadTaskCompletion completionHandler,
-            URLSessionDownloadTask downloadTask) {
-
+    private void sendHttpRequest(DownloadTaskCompletion completionHandler) {
         HttpURLConnection urlConnection = null;
         File tempFile = null;
         InputStream inStream = null;
@@ -78,7 +108,6 @@ public class URLSessionDownloadTask
         URLRequest request = null;
         URLResponse resp = null;
         long contentLength = -1;
-        URLSessionConfiguration configuration = null;
 
         request = getRequest();
         try {
@@ -97,7 +126,7 @@ public class URLSessionDownloadTask
                 } catch (NoSuchMethodError e) {
                     contentLength = urlConnection.getContentLength();
                 }
-                tempFile = downloadStreamInFile(inStream, contentLength, downloadTask);
+                tempFile = downloadStreamInFile(inStream, contentLength);
                 inStream.close();
                 newURL = tempFile.toURI().toURL();
             }/*else{
@@ -142,7 +171,7 @@ public class URLSessionDownloadTask
     @Override
     public void resume() {
         Operation operation = new BlockOperation(() -> {
-            sendHttpRequest(completionHandler, this);
+            sendHttpRequest(completionHandler);
         });
 
         queue.addOperation(operation);
