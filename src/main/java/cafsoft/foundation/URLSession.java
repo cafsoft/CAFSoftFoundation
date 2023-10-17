@@ -62,95 +62,6 @@ public class URLSession {
         return shared;
     }
 
-    private void transfer(InputStream inStream,
-            OutputStream outStream, long contentSize,
-            URLSessionDownloadTask downloadTask)
-            throws IOException {
-
-        final int BUFFER_SIZE = 100 * 1024;
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead = 0;
-        int total = 0;
-
-        do {
-            bytesRead = inStream.read(buffer);
-            if (bytesRead > 0) {
-                outStream.write(buffer, 0, bytesRead);
-                total += bytesRead;
-
-                if (getDelegate() != null) {
-                    URLSessionDownloadDelegate del = null;
-
-                    del = (URLSessionDownloadDelegate) getDelegate();
-                    del.urlSession(this, downloadTask, bytesRead, total, contentSize);
-                }
-
-            }
-        } while (bytesRead != -1);
-    }
-
-    // Read bytes from connection and save its in memory block
-    private Data downloadStreamInData(InputStream inStream)
-            throws IOException {
-
-        ByteArrayOutputStream outStream = null;
-        ByteBuffer byteData = null;
-
-        outStream = new ByteArrayOutputStream(); // (buffer.length)
-        transfer(inStream, outStream, -1, null);
-        byteData = ByteBuffer.wrap(outStream.toByteArray());
-        outStream.close();
-
-        return new Data(byteData);
-    }
-
-    private File downloadStreamInFile(InputStream inStream,
-            long contentLength, URLSessionDownloadTask downloadTask)
-            throws IOException {
-
-        FileOutputStream outStream = null;
-        File tempFile = null;
-
-        tempFile = File.createTempFile("tmp", ".tmp");
-        outStream = new FileOutputStream(tempFile);
-        transfer(inStream, outStream, contentLength, downloadTask);
-        outStream.close();
-
-        return tempFile;
-    }
-
-    private static void uploadStream(OutputStream outStream, byte[] bytesBuffer)
-            throws IOException {
-
-        outStream.write(bytesBuffer);
-    }
-
-    /*
-    private static ByteBuffer getBytes(InputStream inStream)
-            throws IOException {
-
-        final int BUFFER_SIZE = 100 * 1024;
-
-        byte[] buffer = new byte[BUFFER_SIZE];
-        ByteArrayOutputStream outStream = null;
-        ByteBuffer byteData = null;
-
-        outStream = new ByteArrayOutputStream(buffer.length);
-        int bytesRead = 0;
-        while (bytesRead != -1) {
-            bytesRead = inStream.read(buffer);
-            if (bytesRead > 0) {
-                outStream.write(buffer, 0, bytesRead);
-                //if (reading != null){
-                //    reading.onReading(bytesRead);
-                //}
-            }
-        }
-        byteData = ByteBuffer.wrap(outStream.toByteArray());
-
-        return byteData;
-    }
-     */
  /*
     private int createNextTaskIdentifier() {
 
@@ -234,7 +145,6 @@ public class URLSession {
 
             for (String method : methods){
                 if (request.getHttpMethod().equals(method)) {
-                    //sendHttpRequest(request, null, completionHandler);
                     dataTask = new URLSessionDataTask(this, request, 0,
                             workQueue, completionHandler);
                     break;
