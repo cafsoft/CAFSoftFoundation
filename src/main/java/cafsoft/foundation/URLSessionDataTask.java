@@ -40,7 +40,7 @@ public class URLSessionDataTask extends URLSessionTask {
         ByteBuffer byteData = null;
 
         outStream = new ByteArrayOutputStream(); // (buffer.length)
-        transfer(inStream, outStream, -1, null);
+        download(inStream, outStream, -1);
         byteData = ByteBuffer.wrap(outStream.toByteArray());
         outStream.close();
 

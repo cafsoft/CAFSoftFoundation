@@ -7,6 +7,7 @@ package cafsoft.foundation;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -51,40 +52,63 @@ public abstract class URLSessionTask {
         operation = newOperation;
     }
     */
-    
-    
-    protected void uploadStream(OutputStream outStream, byte[] bytesBuffer)
+
+    protected void upload(Data data,
+                          OutputStream destination)
             throws IOException {
 
-        outStream.write(bytesBuffer);
+        byte[] bytes = data.toBytes();
+        ByteArrayInputStream source = new ByteArrayInputStream(bytes);
+        upload(source, destination, bytes.length);
+        destination.close();
     }
 
-
-    protected void transfer(InputStream inStream,
-            OutputStream outStream, long contentSize,
-            URLSessionDownloadTask downloadTask)
+    protected void upload(InputStream source,
+                          OutputStream destination,
+                          long contentSize)
             throws IOException {
 
         final int BUFFER_SIZE = 100 * 1024;
         byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead = 0;
-        int total = 0;
+        int bytes = 0;
+        int totalBytes = 0;
 
-        do {
-            bytesRead = inStream.read(buffer);
-            if (bytesRead > 0) {
-                outStream.write(buffer, 0, bytesRead);
-                total += bytesRead;
+        if (this.getSession().getDelegate() instanceof URLSessionTaskDelegate) {
+            URLSessionTaskDelegate delegate = null;
 
-                if (getSession().getDelegate() != null) {
-                    URLSessionDownloadDelegate del = null;
+            delegate = (URLSessionTaskDelegate) getSession().getDelegate();
 
-                    del = (URLSessionDownloadDelegate) getSession().getDelegate();
-                    del.urlSession(getSession(), downloadTask, bytesRead, total, contentSize);
-                }
+            bytes = source.read(buffer);
+            while (bytes != -1) {
+                destination.write(buffer, 0, bytes);
+                totalBytes += bytes;
+                delegate.urlSession(getSession(), this, bytes, totalBytes, contentSize);
 
+                bytes = source.read(buffer);
             }
-        } while (bytesRead != -1);
+        }else{
+            bytes = source.read(buffer);
+            while (bytes != -1) {
+                destination.write(buffer, 0, bytes);
+                bytes = source.read(buffer);
+            }
+        }
+    }
+
+    protected void download(InputStream source,
+                            OutputStream destination,
+                            long contentSize)
+            throws IOException {
+
+        final int BUFFER_SIZE = 100 * 1024;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytes = 0;
+
+        bytes = source.read(buffer);
+        while (bytes != -1) {
+            destination.write(buffer, 0, bytes);
+            bytes = source.read(buffer);
+        }
     }
 
     public void addRequestProperties(HttpURLConnection connection) {
@@ -123,7 +147,9 @@ public abstract class URLSessionTask {
         if (request.getHttpBody() != null) {
             connection.setDoOutput(true);
             OutputStream outStream = connection.getOutputStream();
-            uploadStream(outStream, request.getHttpBody().toBytes());
+            //uploadStream(outStream, request.getHttpBody().toBytes());
+
+            upload(request.getHttpBody(), outStream);
         }
     }
     
