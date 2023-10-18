@@ -24,7 +24,7 @@ public class URLComponents {
     private final String SCHEME = "(http|https|file)";
     private final String USER = "([^:@\\/\\?#]+)";
     private final String PASSWORD = "([^@\\/\\?#]+)?";
-    private final String HOST = "([^:\\/?#]+)";
+    private final String HOST = "([^:\\/?#]+)?";
     private final String PORT = "(?::(\\d+))?";
     private final String PATH = "(\\/[^?#]*)?";
     private final String QUERY = "(?:\\?([^#]*))?";
@@ -119,10 +119,12 @@ public class URLComponents {
         }
 
         // host:port
-        sb.append(host);
-        if (port != -1) {
-            sb.append(":");
-            sb.append(port);
+        if (host != null) {
+            sb.append(host);
+            if (port != -1) {
+                sb.append(":");
+                sb.append(port);
+            }
         }
 
         // path
